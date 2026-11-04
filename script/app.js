@@ -163,3 +163,402 @@ function calc() {
     const total = +(subtotal + taxes + shipping - discount).toFixed(2);
     return { cart, subtotal, taxes, code: cp ? code : null, couponLabel: cp ? cp.label : '', discount, shipping, shipOld: method === 'standard' && subtotal >= 499 ? 38 : 0, total, method, items: cart.reduce((a, i) => a + i.qty, 0) };
 }
+
+// toast
+let toastT;
+function toast(msg) {
+    let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
+    t.innerHTML = icon('check') + msg; t.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// header / footer
+const LOGO = `<a class="logo" href="index.html"><span class="mark"><svg viewBox="0 0 24 24"><path d="M3 4h5l4 10 4-10h5l-7 16h-4z" fill="#fff"/></svg></span><span>VESTTA</span></a>`;
+function renderHeader() {
+    const el = $('#app-header'); if (!el) return;
+    const page = document.body.dataset.page;
+    const user = store.get('user', null);
+    const MB = { carrinho: 'Meu Carrinho', checkout: 'Finalizar Compra', confirmacao: 'Pedido Confirmado', produto: 'Detalhes do Produto', conta: 'Login', configuracoes: 'Configurações', dados: 'Dados Pessoais', enderecos: 'Endereços', pagamentos: 'Formas de Pagamento', rastreamento: 'Rastrear Pedido' }[page];
+    if (MB) document.body.setAttribute('data-mbar', '1');
+    const mbar = MB ? `<div class="mbar"><button type="button" id="mback" aria-label="Voltar">${icon('left', 20)}</button><span class="t">${MB}</span><button type="button" class="bell" aria-label="Notificações">${icon('bell', 20)}<i></i></button></div>` : '';
+    const navs = [['NOVIDADES', 'colecao.html?q=novidades', 'new'], ['MOLETONS', 'colecao.html?cat=moletons', 'moletons'], ['JAQUETAS', 'colecao.html?cat=jaquetas', 'jaquetas'], ['CALÇAS', 'colecao.html?cat=calcas', 'calcas'], ['SNEAKERS', 'colecao.html?cat=tenis', 'tenis'], ['ACESSÓRIOS', 'colecao.html?cat=acessorios', 'acessorios']];
+    el.innerHTML = `
+  <div class="topbar"><div class="wrap"><div><span class="dot"></span>EDIÇÃO LIMITADA</div><div class="c">DROP 04 // LIVE — FRETE GRÁTIS ACIMA DE R$ 499 — USE O CUPOM <code>STREET30</code></div><div class="r"><a href="#">Ajuda</a><a href="rastreamento.html">Rastrear Envio</a></div></div></div>
+  <header class="header"><div class="wrap">
+    ${LOGO}
+    <nav class="nav">${navs.map(n => `<a href="${n[1]}" class="${new URLSearchParams(location.search).get('cat') === n[2] ? 'on' : ''}">${n[0]}</a>`).join('')}</nav>
+    <form class="search" id="hsearch">${icon('search')}<input placeholder="Buscar roupas..." aria-label="Buscar"></form>
+    <a class="icon-btn" href="favoritos.html" aria-label="Favoritos">${icon('heart')}<span class="badge" id="fav-badge">0</span></a>
+    <a class="icon-btn" href="carrinho.html" aria-label="Sacola">${icon('bag')}<span class="badge red" id="cart-badge">0</span></a>
+    <a class="user" href="${user ? 'perfil.html' : 'conta.html#login'}" id="user-box"><span class="av ${user ? 'has' : ''}">${user ? user.name.split(' ').map(s => s[0]).join('').slice(0, 2) : icon('user')}</span><div><b>${user ? user.name : 'Usuário'}</b><small>Membro VESTTA</small></div></a>
+  </div>${mbar}</header>`;
+    $('#hsearch').addEventListener('submit', e => { e.preventDefault(); const q = e.target.querySelector('input').value.trim(); location.href = 'colecao.html' + (q ? '?q=' + encodeURIComponent(q) : ''); });
+    const mb = $('#mback'); if (mb) mb.onclick = () => history.length > 1 ? history.back() : (location.href = 'index.html');
+    updateBadges();
+}
+function updateBadges() {
+    const n = cartCount(); $$('#cart-badge,.bnav .badge').forEach(b => { b.textContent = n; b.style.display = n ? '' : 'none'; });
+    const f = $('#fav-badge'); if (f) { const k = favs().size; f.textContent = k; f.style.display = k ? '' : 'none'; }
+}
+function renderBottomNav() {
+    const page = document.body.dataset.page; if (!['home', 'colecao', 'carrinho', 'perfil', 'favoritos'].includes(page)) return;
+    const fav = new URLSearchParams(location.search).get('fav') === '1';
+    const on = page === 'home' ? 'd' : page === 'carrinho' ? 'c' : page === 'favoritos' ? 's' : page === 'perfil' ? 'p' : 'b';
+    const it = (k, href, ic, lb, extra = '') => `<a href="${href}" class="${on === k ? 'on' : ''}">${icon(ic, 22)}<span>${lb}</span>${extra}</a>`;
+    const nav = document.createElement('nav'); nav.className = 'bnav';
+    nav.innerHTML = it('d', 'index.html', 'compass', 'Descobrir') + it('b', 'colecao.html', 'search', 'Buscar') + it('s', 'favoritos.html', 'heart', 'Salvos') + it('c', 'carrinho.html', 'bag', 'Carrinho', '<span class="badge red">0</span>') + it('p', store.get('user', null) ? 'perfil.html' : 'conta.html#login', 'user', 'Perfil');
+    document.body.appendChild(nav); document.body.classList.add('has-bnav'); updateBadges();
+}
+function renderFooter() {
+    const el = $('#app-footer'); if (!el) return;
+    el.innerHTML = `<footer class="footer"><div class="wrap">
+    <div><div class="logo-t">VESTTA</div><p>Streetwear para quem transforma atitude em identidade. Silhuetas oversized, estética urbana e drops que expressam uma forma própria de viver a cidade.</p>
+      <div class="nl"><small>Acesso antecipado &amp; Drops</small><form class="nlform"><input type="email" placeholder="Seu melhor e-mail" required aria-label="E-mail"><button>Assinar ${icon('right', 16)}</button></form></div></div>
+    <div><h5>Atendimento</h5><ul><li><a href="#"><b>Central de Ajuda</b></a></li><li><a href="#">Perguntas Frequentes</a></li><li><a href="#">Trocas e Devoluções</a></li><li><a href="#">Guia de Medidas</a></li></ul></div>
+    <div><h5>Explore</h5><ul><li><a href="colecao.html">Novos Drops</a></li><li><a href="colecao.html?cat=camisetas">Oversized Essentials</a></li><li><a href="colecao.html?cat=camisetas">Camisetas e Tops</a></li><li><a href="colecao.html?cat=moletons">Moletons e Hoodies</a></li></ul></div>
+    <div><h5>Legal &amp; Privacidade</h5><ul><li><a href="#">Termos de Uso</a></li><li><a href="#">Política de Privacidade</a></li><li><a href="#">Política de Trocas e Devoluções</a></li><li><a href="#">Garantia de Autenticidade</a></li></ul></div>
+  </div></footer>`;
+    $$('.nlform').forEach(f => f.addEventListener('submit', e => { e.preventDefault(); f.reset(); toast('Inscrição confirmada! Você receberá os próximos drops.'); }));
+}
+
+// card de produto
+const favs = () => new Set(store.get('favs', []));
+function productCard(p, mode) {
+    const on = favs().has(p.id);
+    return `<article class="pcard" data-id="${p.id}">
+    <a class="img" href="produto.html?id=${p.id}">${p.tag ? `<span class="tag ${p.tagRed ? 'red' : ''}">${p.tag}</span>` : ''}${pic(p)}</a>
+    <button class="fav ${on ? 'on' : ''}" data-fav="${p.id}" aria-label="Favoritar">${icon('heart', 17)}</button>
+    <div class="meta"><span>${p.colors.join(' / ')}</span><b>${icon('star')}${p.rating.toFixed(1)} (${p.reviews})</b></div>
+    <a class="name" href="produto.html?id=${p.id}" style="display:block">${p.name}</a>
+    <div class="row"><span class="price">${brl(p.price)}${p.old ? `<s>${brl(p.old)}</s>` : ''}</span>
+      <button class="add" data-add="${p.id}" aria-label="Adicionar à sacola">${icon('cart', 16)}</button></div></article>`;
+}
+function bindCards(root = document) {
+    $$('[data-add]', root).forEach(b => b.onclick = () => { addToCart(b.dataset.add); toast('Adicionado à sacola'); });
+    $$('[data-fav]', root).forEach(b => b.onclick = () => {
+        const f = favs(); f.has(b.dataset.fav) ? f.delete(b.dataset.fav) : f.add(b.dataset.fav);
+        store.set('favs', [...f]); b.classList.toggle('on'); updateBadges(); toast(b.classList.contains('on') ? 'Salvo nos favoritos' : 'Removido dos favoritos');
+    });
+}
+
+// Páginas
+const pages = {};
+
+// home
+pages.home = () => {
+    const grid = $('#home-grid');
+    const draw = cat => { grid.innerHTML = PRODUCTS.filter(p => cat === 'todos' || p.cat === cat).slice(0, 8).map(p => productCard(p)).join(''); bindCards(grid); };
+    draw('todos');
+    $$('#home-chips .chip').forEach(c => c.onclick = () => { $$('#home-chips .chip').forEach(x => x.classList.remove('on')); c.classList.add('on'); draw(c.dataset.cat); });
+    $('#copy-coupon').onclick = () => { navigator.clipboard && navigator.clipboard.writeText('DROP20').catch(() => { }); toast('Cupom DROP20 copiado'); store.set('coupon', 'DROP20'); };
+    $('#news-form').onsubmit = e => { e.preventDefault(); e.target.reset(); toast('Inscrição confirmada!'); };
+};
+
+// coleção
+pages.colecao = () => {
+    const qs = new URLSearchParams(location.search);
+    const rawQ = qs.get('q') || '';
+    const st = { cat: qs.get('cat') || 'todos', q: norm(rawQ), fav: qs.get('fav') === '1', max: 2890, sizes: new Set(), colors: new Set(), fits: new Set(), sort: 'relevancia' };
+    if (st.q === 'novidades') { st.q = ''; }
+    const titles = { moletons: 'Moletom & Casacos', jaquetas: 'Jaquetas', calcas: 'Calças', tenis: 'Tênis', camisetas: 'Camisetas', acessorios: 'Acessórios', todos: 'Coleção Drop 04' };
+    const grid = $('#list-grid');
+    const active = () => st.sizes.size + st.colors.size + st.fits.size + (st.max < 2890 ? 1 : 0);
+    function draw() {
+        const fv = favs(); const toks = st.q.split(/\s+/).filter(Boolean);
+        let list = PRODUCTS.filter(p => (st.cat === 'todos' || p.cat === st.cat) && (!st.fav || fv.has(p.id)) && p.price <= st.max
+            && toks.every(t => hay(p).includes(t))
+            && (!st.sizes.size || p.sizes.some(s => st.sizes.has(s)))
+            && (!st.colors.size || p.colors.some(c => st.colors.has(norm(c.split(' ')[0]))))
+            && (!st.fits.size || st.fits.has(p.fit === 'Regular' ? 'Regular Fit' : p.fit)));
+        if (st.sort === 'menor') list.sort((a, b) => a.price - b.price);
+        if (st.sort === 'maior') list.sort((a, b) => b.price - a.price);
+        if (st.sort === 'avaliacao') list.sort((a, b) => b.rating - a.rating);
+        $('#list-title').textContent = st.fav ? 'Meus Favoritos' : (titles[st.cat] || 'Coleção');
+        $('#list-count').textContent = `${list.length} ${list.length === 1 ? 'item encontrado' : 'itens encontrados'}${rawQ && norm(rawQ) !== 'novidades' ? ' para “' + rawQ + '”' : ''}`;
+        grid.innerHTML = list.length ? list.map(p => productCard(p)).join('') : `<p style="grid-column:1/-1;padding:40px;text-align:center;color:#777">${st.fav ? 'Você ainda não salvou nenhuma peça.' : 'Nenhuma peça encontrada com esses filtros.'}</p>`;
+        $('#list-show').innerHTML = `Mostrando <b>${list.length ? '1 a ' + list.length : '0'}</b> de <b>${list.length}</b> peças catalogadas`;
+        $('#q-chip').style.display = st.q ? '' : 'none'; $('#q-chip span').textContent = rawQ;
+        $('#clear').textContent = 'LIMPAR (' + active() + ')';
+        $$('#list-tabs .chip').forEach(c => c.classList.toggle('on', c.dataset.cat === st.cat && !st.fav));
+        bindCards(grid);
+    }
+    $$('#list-tabs .chip').forEach(c => c.onclick = () => { st.cat = c.dataset.cat; st.fav = false; draw(); });
+    $$('.filters [data-fit]').forEach(i => i.onchange = () => { i.checked ? st.fits.add(i.dataset.fit) : st.fits.delete(i.dataset.fit); draw(); });
+    $$('#fsizes .size').forEach(b => b.onclick = () => { b.classList.toggle('on'); b.classList.contains('on') ? st.sizes.add(b.textContent) : st.sizes.delete(b.textContent); draw(); });
+    $$('#fcolors .sw').forEach(b => b.onclick = () => { b.classList.toggle('on'); const k = norm(b.dataset.c); b.classList.contains('on') ? st.colors.add(k) : st.colors.delete(k); draw(); });
+    $('#frange').oninput = e => { st.max = +e.target.value; $('#frange-max').textContent = 'R$ ' + st.max.toLocaleString('pt-BR'); draw(); };
+    $('#sort').onchange = e => { st.sort = e.target.value; draw(); };
+    $('#q-chip').onclick = () => { st.q = ''; draw(); };
+    $('#open-filters').onclick = () => $('.filters').classList.toggle('open');
+    $('#clear').onclick = () => { st.sizes.clear(); st.colors.clear(); st.fits.clear(); st.max = 2890; $('#frange').value = 2890; $('#frange-max').textContent = 'R$ 2.890'; $$('.size.on,.sw.on').forEach(x => x.classList.remove('on')); $$('.filters [data-fit]').forEach(x => x.checked = false); draw(); };
+    draw();
+};
+
+// produto
+pages.produto = () => {
+    const p = byId(new URLSearchParams(location.search).get('id')) || byId('jaqueta-techwear-utility');
+    document.title = p.name + ' — VESTTA';
+    const sel = { color: p.colors[0], size: p.sizes[1] || p.sizes[0] };
+    const tones = ['', 'sand', 'navy', 'green'];
+    const gallery = [p.img, ...PRODUCTS.filter(x => x.id !== p.id && x.cat !== 'tenis' && x.img).slice(0, 3).map(x => x.img)];
+    const gimg = i => gallery[i] ? imgTag(gallery[i].replace('w=700', 'w=1100'), p.name) : '';
+    const rot = PRODUCTS.filter(x => x.id !== p.id && ['jaqueta-kennedy', 'oversized-logo-tee', 'sneaker-vulcan'].includes(x.id));
+    $('#pdp').innerHTML = `
+  <div class="wrap">
+    <div class="crumbs" style="display:flex;justify-content:space-between"><div><a href="index.html">Início</a><span>/</span><b>${p.name}</b></div><a href="#" id="share" style="display:flex;gap:6px;align-items:center">${icon('share', 14)} Compartilhar</a></div>
+    <div class="pdp">
+      <div class="thumbs">${[0, 1, 2, 3].map(i => `<button class="thumb ${i ? '' : 'on'}" data-i="${i}"><div class="ph ${tones[i]}"><span>${i + 1}</span>${gimg(i).replace('w=1100', 'w=200')}</div></button>`).join('')}</div>
+      <div class="stage"><button class="stage-fav ${favs().has(p.id) ? 'on' : ''}" id="sfav" aria-label="Favoritar">${icon('heart', 18)}</button><span class="cnt" id="cnt">1 / 4</span><div id="stage-img" class="ph ${p.tone === 'dark' ? '' : p.tone}" style="height:100%"><span>${p.name} — foto 1</span>${gimg(0)}</div></div>
+      <div class="info">
+        <div class="top"><span class="tag">DROP 04 // EDIÇÃO LIMITADA</span><span>• 300 Unidades</span></div>
+        <h1>${p.name}</h1>
+        <div class="rate"><b>★ ${p.rating.toFixed(1)}</b>• <a class="link" href="#">${p.reviews} avaliações verificadas</a> • <span class="rec">98% RECOMENDAM</span></div>
+        <div class="pricebox"><div><b>${brl(p.price)}</b><small>ou em até 6x de ${brl(p.price / 6)} sem juros no cartão</small></div><span class="tag">5% OFF NO PIX</span></div>
+        <div class="desc">Jaqueta urbana de inspiração techwear, com capuz integrado, fechamento frontal por zíper, bolsos utilitários e detalhes de ajuste. Uma peça versátil para composições streetwear modernas, com visual funcional e minimalista.</div>
+        <div class="opt-h"><b>COR:</b><span id="color-name">${sel.color}</span></div>
+        <div class="swatches" id="colors">${p.colors.map((c, i) => `<button class="sw ${i ? '' : 'on'} ${c === 'Off White' ? 'light' : ''}" data-c="${c}" style="background:${colorHex(c)}" title="${c}">${icon('check')}</button>`).join('')}</div>
+        <div class="opt-h"><b>ESCOLHA O TAMANHO:</b><a class="link" href="#" style="font-weight:400;text-transform:none;letter-spacing:0">Guia de Medidas</a></div>
+        <div class="sizes" id="sizes">${p.sizes.map(s => `<button class="size ${s === sel.size ? 'on' : ''}" data-s="${s}">${s}</button>`).join('')}</div>
+        <div class="model"><span>● Modelo tem 1,85m, 80kg e veste M</span><b>Caimento Regular</b></div>
+        <div class="buy"><div class="mprice"><small>Preço total</small><b>${brl(p.price)}</b></div><button class="btn" id="buy">${icon('bag', 16)} Adicionar à sacola</button><button class="fav ${favs().has(p.id) ? 'on' : ''}" id="pfav" aria-label="Favoritar">${icon('heart')}</button></div>
+        <div class="freight"><div class="hd">${icon('truck', 16)} Calcule frete</div><div class="f"><input id="cep" placeholder="00000-000" maxlength="9" inputmode="numeric"><button class="btn sm" id="calc-cep" style="height:44px">Calcular</button></div><div class="res" id="cep-res"></div></div>
+        <div class="acc"><button>Detalhes de Tecido &amp; Caimento ${icon('down', 18)}</button><div class="body">Algodão BCI encorpado de 260g, com toque macio e estrutura. Modelagem regular com ombros levemente caídos. Lavar à mão ou ciclo delicado, do avesso, em água fria.</div></div>
+        <div class="acc"><button>Envio &amp; Devoluções Grátis ${icon('down', 18)}</button><div class="body">Frete grátis acima de R$ 499. Primeira troca gratuita em até 30 dias corridos, com coleta reversa sem custo.</div></div>
+      </div>
+    </div>
+    <div class="facts">
+      <div class="fact"><big>260g</big><b>Algodão encorpado</b><small>Estrutura e presença para o uso diário.</small></div>
+      <div class="fact"><big>100%</big><b>Algodão BCI</b><small>Composição pensada para conforto e durabilidade.</small></div>
+      <div class="fact"><big>30D</big><b>Garantia de troca</b><small>Consulte as condições e os prazos da política de trocas.</small></div>
+    </div>
+    <div class="pdp-rot"><div class="label" style="letter-spacing:.14em">Curadoria de estilo VESTTA</div><h2 class="h2" style="margin:4px 0 18px">Monte sua rotação</h2>
+      <div class="grid c3">${rot.map(x => `<article class="pcard"><a class="img" href="produto.html?id=${x.id}" style="aspect-ratio:3/4">${x.tag ? `<span class="tag">${x.tag}</span>` : ''}${pic(x)}</a><button class="fav" data-fav="${x.id}">${icon('heart', 17)}</button><div class="meta"><span>${x.colors.join(' / ')}</span><span>Tamanhos: ${x.range}</span></div><a class="name" href="produto.html?id=${x.id}" style="display:block">${x.name}</a><div class="row"><span class="price">${brl(x.price)}</span><button class="add txt" data-add="${x.id}">+ Sacola</button></div></article>`).join('')}</div></div>
+  </div>`;
+    const stage = $('#stage-img');
+    $$('.thumb').forEach(t => t.onclick = () => {
+        $$('.thumb').forEach(x => x.classList.remove('on')); t.classList.add('on');
+        const i = +t.dataset.i; stage.className = 'ph ' + (i ? tones[i] : (p.tone === 'dark' ? '' : p.tone));
+        stage.innerHTML = `<span>${p.name} — foto ${i + 1}</span>${gimg(i)}`; $('#cnt').textContent = `${i + 1} / 4`;
+    });
+    $$('#colors .sw').forEach(b => b.onclick = () => { $$('#colors .sw').forEach(x => x.classList.remove('on')); b.classList.add('on'); sel.color = b.dataset.c; $('#color-name').textContent = sel.color; });
+    $$('#sizes .size').forEach(b => b.onclick = () => { $$('#sizes .size').forEach(x => x.classList.remove('on')); b.classList.add('on'); sel.size = b.dataset.s; });
+    $('#buy').onclick = () => { addToCart(p.id, sel.color, sel.size); toast('Adicionado à sacola'); };
+    $$('#pfav,#sfav').forEach(b => b.onclick = () => { const f = favs(); f.has(p.id) ? f.delete(p.id) : f.add(p.id); store.set('favs', [...f]); $$('#pfav,#sfav').forEach(x => x.classList.toggle('on', f.has(p.id))); updateBadges(); });
+    $('#share').onclick = e => { e.preventDefault(); navigator.clipboard && navigator.clipboard.writeText(location.href).catch(() => { }); toast('Link copiado'); };
+    $('#cep').oninput = e => { let v = e.target.value.replace(/\D/g, '').slice(0, 8); if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5); e.target.value = v; };
+    $('#calc-cep').onclick = () => {
+        const r = $('#cep-res'); const ok = $('#cep').value.replace(/\D/g, '').length === 8; r.style.display = 'block';
+        r.innerHTML = ok ? `<b>Entrega Padrão</b> — ${p.price >= 499 ? 'R$ 5,00' : 'R$ 38,00'} • 2 a 3 dias úteis<br><b>Envio Expresso</b> — R$ 15,00 • em até 24h` : '<span style="color:var(--accent)">Digite um CEP válido com 8 dígitos.</span>';
+    };
+    $$('.acc button').forEach(b => b.onclick = () => b.parentElement.classList.toggle('open'));
+    bindCards($('.pdp-rot'));
+};
+
+// carrinho
+pages.carrinho = () => {
+    const root = $('#cart');
+    function draw() {
+        const c = calc();
+        if (!c.cart.length) {
+            root.innerHTML = `<div class="wrap"><div class="empty" style="margin-top:30px"><h2 class="h2">Sua sacola está vazia</h2><p>Explore os drops e monte seu look.</p><a class="btn" href="colecao.html">Explorar coleção ${icon('right', 16)}</a></div></div>`; return;
+        }
+        const pct = Math.min(100, Math.round(c.subtotal / 499 * 100));
+        root.innerHTML = `<div class="wrap">
+      <div class="crumbs"><a href="index.html">Início</a><span>/</span><b>Carrinho de compras</b></div>
+      <a class="back" href="colecao.html">${icon('left', 16)} Continuar comprando</a>
+      <div class="cart"><div>
+        <h1>Meu Carrinho</h1>
+        <div class="strip"><span class="ic">${icon('truck')}</span><div><b>Envio prioritário VESTTA</b><small>Despacho conforme prazo informado no rastreamento do pedido.</small></div><span class="pill">Expresso disponível</span></div>
+        ${c.cart.map((it, i) => { const p = byId(it.id); return `<div class="item"><a class="im" href="produto.html?id=${p.id}">${pic(p, '')}</a><div class="nf"><small>${p.sub}</small><b>${p.name}</b><span>Cor: ${it.color}<i></i>Tam: ${it.size}</span></div><span class="pr">${brl(p.price * it.qty)}</span><div class="qty"><button data-q="-1" data-i="${i}" aria-label="Menos">${icon('minus', 14)}</button><span>${it.qty}</span><button data-q="1" data-i="${i}" aria-label="Mais">${icon('plus', 14)}</button></div><button class="del" data-del="${i}" aria-label="Remover">${icon('trash', 18)}</button></div>`; }).join('')}
+        <div class="couponbar" id="cbar">${c.code ? `<span class="ic">${icon('tag', 18)}</span><b class="ok">${c.code} ${icon('check')}<em>VÁLIDO</em></b><div class="act"><button class="btn soft sm" id="chg">Alterar</button><button class="del" id="rmc" style="color:#000" aria-label="Remover cupom">${icon('x', 16)}</button></div>` : `<span class="ic">${icon('tag', 18)}</span><div class="act" style="margin-left:0;flex:1"><input id="cin" placeholder="Código do cupom"><button class="btn sm" id="apc">Aplicar</button><span class="msg" id="cmsg"></span></div>`}</div>
+        <div class="ship-bar"><div class="t"><span>${icon('check', 14)} ${c.subtotal >= 499 ? 'Você desbloqueou o frete grátis' : 'Faltam ' + brl(499 - c.subtotal) + ' para o frete grátis'}</span><span>${pct}% ${c.subtotal >= 499 ? 'concluído' : ''}</span></div><div class="bar"><i style="width:${pct}%"></i></div><div class="b"><span>${c.subtotal >= 499 ? 'Benefício liberado para este pedido (compras acima de R$ 499,00)' : 'Frete grátis em compras acima de R$ 499,00'}</span><b>${c.shipOld ? 'Economia de R$ 38,00 no frete' : ''}</b></div></div>
+      </div>
+      <aside><div class="summary"><div class="hd"><h3>Resumo do pedido</h3><span class="count">${c.items} ${c.items > 1 ? 'itens' : 'item'}</span></div>
+        <div class="line"><span>Subtotal dos produtos</span><b>${brl(c.subtotal)}</b></div>
+        <div class="line"><span>Impostos e tributos ⓘ</span><b>${brl(c.taxes)}</b></div>
+        <div class="line"><span>Entrega com rastreamento</span><b>${c.shipOld ? `<s>${brl(c.shipOld)}</s>` : ''}${brl(c.shipping)}</b></div>
+        ${c.discount ? `<div class="line cp"><span>${icon('tag', 14)} Cupom (${c.code})</span><span>-${brl(c.discount)}</span></div>` : ''}
+        <div class="total"><div><b>Total</b><small>Tributos e seguro de carga inclusos</small></div><div class="v"><b>${brl(c.total)}</b><small>ou 10x de ${brl(c.total / 10)} sem juros</small></div></div>
+        <a class="btn" href="checkout.html">Ir para o checkout ${icon('right', 16)}</a>
+        <a class="btn pix" href="checkout.html?pay=pix">${icon('bolt', 14)} Checkout rápido com PIX (-5% extra)</a>
+        <div class="methods"><span><i></i>PIX</span><span>• Cartão até 10x</span><span>• Apple Pay</span><span>• Nupay</span></div>
+        <div class="help"><div>${icon('headset', 16)} Precisa de ajuda com seu pedido?</div><a class="link" href="#">Suporte VESTTA</a></div></div>
+        <div class="assure"><div class="r"><span class="ic">${icon('repeat', 16)}</span><div><b>Primeira troca gratuita</b><small>Até 30 dias corridos para solicitar troca sem custos de postagem.</small></div></div><div class="r"><span class="ic">${icon('award', 16)}</span><div><b>Autenticidade VESTTA</b><small>Peças acompanham etiqueta NFC numerada do atelier VESTTA.</small></div></div></div>
+      </aside></div></div>`;
+        $$('[data-q]').forEach(b => b.onclick = () => { const cart = getCart(); const it = cart[+b.dataset.i]; it.qty = Math.max(1, it.qty + +b.dataset.q); setCart(cart); draw(); });
+        $$('[data-del]').forEach(b => b.onclick = () => { const cart = getCart(); cart.splice(+b.dataset.del, 1); setCart(cart); draw(); toast('Item removido'); });
+        const rm = $('#rmc'); if (rm) rm.onclick = () => { store.set('coupon', ''); draw(); };
+        const chg = $('#chg'); if (chg) chg.onclick = () => { store.set('coupon', ''); draw(); setTimeout(() => $('#cin') && $('#cin').focus(), 0); };
+        const ap = $('#apc'); if (ap) ap.onclick = () => {
+            const v = $('#cin').value.trim().toUpperCase(); const cp = COUPONS[v];
+            if (!cp) return $('#cmsg').textContent = 'Cupom inválido';
+            if (cp.min && calc().subtotal < cp.min) return $('#cmsg').textContent = `Válido acima de ${brl(cp.min)}`;
+            store.set('coupon', v); draw(); toast('Cupom aplicado');
+        };
+    }
+    draw();
+};
+
+// checkout
+pages.checkout = () => {
+    const root = $('#co'); let pay = new URLSearchParams(location.search).get('pay') === 'pix' ? 'pix' : 'card'; let saved = 0;
+    const cards = [{ last: '3812', brand: 'Mastercard', exp: '27/08', num: '4532 •••• •••• 3812' }, { last: '5625', brand: 'Visa', exp: '26/11', num: '4716 •••• •••• 5625' }];
+    function draw(keep) {
+        const c = calc();
+        if (!c.cart.length) { location.href = 'carrinho.html'; return; }
+        const prev = keep ? { name: $('#cname') && $('#cname').value, exp: $('#cexp') && $('#cexp').value, cvv: $('#ccvv') && $('#ccvv').value } : {};
+        const inst = Array.from({ length: 10 }, (_, i) => `<option>${i + 1}x de ${brl(c.total / (i + 1))} ${i ? 'sem juros' : 'à vista sem juros'}</option>`).join('');
+        root.innerHTML = `<div class="wrap">
+      <div class="crumbs"><a href="index.html">Início</a><span>/</span><a href="carrinho.html">Carrinho de compras</a><span>/</span><b>Pagamento</b></div>
+      <a class="back" href="carrinho.html">${icon('left', 16)} Voltar para o carrinho</a>
+      <div class="steps"><div class="step"><span class="n">${icon('check', 14)}</span><div><small>01. Etapa</small><b>Carrinho</b></div></div><span class="ln"></span><div class="step"><span class="n">02</span><div><small>Etapa atual</small><b>Pagamento</b></div></div><span class="ln off"></span><div class="step todo"><span class="n">04</span><div><small>Aguardando</small><b>Confirmação</b></div></div></div>
+      <div class="co"><div>
+        <div class="box"><h3>${icon('pin', 20)} ENDEREÇO DE ENTREGA<span class="acts"><a class="link" href="#">Alterar</a><a href="#">+ Novo endereço</a></span></h3>
+          <div class="addr"><span class="ic">${icon('home', 20)}</span><div><b>Casa <span class="tag" style="margin-left:6px">PADRÃO</span></b><p>Av. Paulista, 1000 — Apto 84, Edifício Horizon<br>Bela Vista, São Paulo — SP, 01310-100</p><small>Destinatário: Davy Jones — (11) 98822-4411</small></div><span class="edit">${icon('edit', 15)}</span></div></div>
+        <div class="box"><h3>${icon('truck', 20)} MÉTODO DE ENVIO</h3><div class="ship-opts">
+          <label class="opt ${c.method === 'standard' ? 'on' : ''}"><input type="radio" name="ship" value="standard" class="sr" ${c.method === 'standard' ? 'checked' : ''}><div class="t"><span class="r"></span>Entrega Padrão<em>${brl(c.subtotal >= 499 ? 5 : 38)}</em></div><small>Previsão: 2 a 3 dias úteis</small></label>
+          <label class="opt ${c.method === 'express' ? 'on' : ''}"><input type="radio" name="ship" value="express" class="sr" ${c.method === 'express' ? 'checked' : ''}><div class="t"><span class="r"></span>Envio Expresso<em>R$ 15,00</em></div><small>Garantido em 24h <span class="fast">Mais rápido</span></small></label></div></div>
+        <div class="box"><h3>${icon('card', 20)} FORMA DE PAGAMENTO</h3>
+          <div class="paytabs"><button data-pay="card" class="${pay === 'card' ? 'on' : ''}">${icon('card', 15)} Cartão</button><button data-pay="pix" class="${pay === 'pix' ? 'on' : ''}">${icon('cash', 15)} PIX</button><button data-pay="apple" class="${pay === 'apple' ? 'on' : ''}">${icon('phone', 15)} Apple Pay</button></div>
+          <div class="pay-pane ${pay === 'card' ? 'on' : ''}">
+            <div class="label" style="display:flex;justify-content:space-between;margin-bottom:10px"><span>Cartões salvos</span><span>2 cadastrados</span></div>
+            <div class="saved">${cards.map((k, i) => `<div class="scard ${saved === i ? 'on' : ''}" data-k="${i}"><span class="lg">${k.brand === 'Visa' ? 'VISA' : '<span style="display:flex"><i style="width:18px;height:18px;border-radius:50%;background:#e11d48"></i><i style="width:18px;height:18px;border-radius:50%;background:#f59e0b;margin-left:-8px;opacity:.85"></i></span>'}</span><div><b>•••• ${k.last} ${i === 0 ? '<span class="tag" style="font-size:8px;padding:2px 6px">PADRÃO</span>' : ''}</b><small>${k.brand} • Expira ${k.exp}</small></div><span class="ck">${icon('check', 14)}</span></div>`).join('')}</div>
+            <div class="label" style="margin-bottom:12px">Dados para cobrança</div>
+            <div class="field"><label>Número do cartão</label><div class="in">${icon('card', 18)}<input id="cnum" value="${cards[saved].num}" inputmode="numeric" maxlength="19">${icon('check', 18)}</div></div>
+            <div class="field"><label>Nome do titular (como no cartão)</label><div class="in">${icon('user', 18)}<input id="cname" value="${prev.name || 'DAVY JONES'}" style="text-transform:uppercase"></div></div>
+            <div class="two"><div class="field"><label>Data de validade</label><div class="in">${icon('clock', 18)}<input id="cexp" value="${prev.exp || '27/08/26'}" maxlength="8"></div></div><div class="field"><label style="display:flex;justify-content:space-between">CVV / CVC ${icon('help', 14)}</label><div class="in">${icon('lock', 18)}<input id="ccvv" value="${prev.cvv || '345'}" maxlength="4" inputmode="numeric"></div></div></div>
+            <div class="field"><span class="sub">Condição de parcelamento</span><div class="in"><select id="inst">${inst}</select>${icon('down', 16)}</div></div>
+            <div class="toggle"><span>Salvar este cartão para compras futuras</span><button class="sw-t on" id="savecard" aria-label="Salvar cartão"></button></div>
+          </div>
+          <div class="pay-pane ${pay === 'pix' ? 'on' : ''}"><div class="pixbox"><div class="qr"></div><b style="font-size:20px">${brl(c.total * .95)}</b><p>Pague via PIX e ganhe 5% de desconto extra. O QR Code é gerado ao finalizar o pedido e expira em 30 minutos.</p></div></div>
+          <div class="pay-pane ${pay === 'apple' ? 'on' : ''}"><div class="pixbox"><p style="font-size:14px">Você confirmará o pagamento de <b>${brl(c.total)}</b> com Face ID / Touch ID ao finalizar o pedido.</p></div></div>
+        </div>
+      </div>
+      <aside><div class="summary" style="top:96px"><div class="hd"><h3 style="font-size:15px;letter-spacing:.06em">RESUMO DO PEDIDO</h3><span class="count">${c.items} Itens</span></div>
+        ${c.cart.map(it => { const p = byId(it.id); return `<div class="mini"><div class="im">${pic(p, '')}</div><div><b>${p.name}</b><small>Tam: ${it.size} • Qtd: ${it.qty}</small><span>${brl(p.price * it.qty)}</span></div></div>`; }).join('')}
+        ${c.code ? `<div class="coupon-row"><div class="lb"><span>Cupom promocional</span><b>1 ativo</b></div><div class="bx"><span class="ic">${icon('shield', 16)}</span><div><b>${c.code}<em>${c.couponLabel}</em></b><small>Aplicado (-${brl(c.discount)})</small></div><a href="carrinho.html">ALTERAR</a></div></div>` : ''}
+        <div class="line" style="margin-top:22px"><span>Subtotal</span><b>${brl(c.subtotal)}</b></div>
+        <div class="line"><span>Tributos &amp; Encargos (7%) ⓘ</span><b>${brl(c.taxes)}</b></div>
+        <div class="line"><span>Taxa de Entrega</span><b>${brl(c.shipping)}</b></div>
+        ${c.discount ? `<div class="line" style="color:var(--accent)"><span>${icon('tag', 13)} Desconto Cupom</span><b>-${brl(c.discount)}</b></div>` : ''}
+        <div class="total"><div><b style="font-size:15px">TOTAL</b><small style="max-width:none">Inclui tributos e taxas de envio</small></div><div class="v"><b>${brl(c.total)}</b></div></div>
+        <button class="btn" id="finish">${icon('lock', 16)} Finalizar pedido (${brl(c.total)}) ${icon('right', 16)}</button></div>
+        <div class="pack">${icon('box', 24)}<div><b>Embalagem Antiviolação</b><span>Todas as peças são enviadas em caixas com lacre holográfico selado.</span></div></div>
+      </aside></div></div>`;
+        $$('[name=ship]').forEach(r => r.onchange = () => { store.set('ship', r.value); draw(true); });
+        $$('[data-pay]').forEach(b => b.onclick = () => { pay = b.dataset.pay; draw(true); });
+        $$('.scard').forEach(s => s.onclick = () => { saved = +s.dataset.k; draw(true); });
+        $('#savecard').onclick = e => e.currentTarget.classList.toggle('on');
+        const n = $('#cnum'); if (n) n.oninput = e => e.target.value = e.target.value.replace(/[^\d•\s]/g, '');
+        const ex = $('#cexp'); if (ex) ex.oninput = e => { let v = e.target.value.replace(/\D/g, '').slice(0, 6); if (v.length > 4) v = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4); else if (v.length > 2) v = v.slice(0, 2) + '/' + v.slice(2); e.target.value = v; };
+        $('#finish').onclick = () => {
+            if (pay === 'card') {
+                const ok = [$('#cnum').value.replace(/\D|•/g, '').length >= 4, $('#cname').value.trim().length > 2, $('#cexp').value.length >= 5, $('#ccvv').value.length >= 3];
+                ['#cnum', '#cname', '#cexp', '#ccvv'].forEach((s, i) => $(s).closest('.in').classList.toggle('err', !ok[i]));
+                if (ok.includes(false)) return toast('Revise os dados do cartão');
+            }
+            const id = 'ORD-' + Math.floor(10000 + Math.random() * 89999);
+            const k = cards[saved];
+            store.set('order', { id, date: new Date().toISOString(), items: c.cart, subtotal: c.subtotal, taxes: c.taxes, shipping: c.shipping, discount: c.discount, total: pay === 'pix' ? +(c.total * .95).toFixed(2) : c.total, method: c.method, pay, card: k.last, brand: k.brand, inst: pay === 'card' ? ($('#inst').selectedIndex + 1) : 1 });
+            store.set('cart', []); store.set('coupon', 'STREET30'); store.del('ship');
+            location.href = 'confirmacao.html';
+        };
+    }
+    draw();
+};
+
+// confirmação
+pages.confirmacao = () => {
+    const o = store.get('order', null) || { id: 'ORD-89421', total: 1015.7, method: 'express', pay: 'card', card: '3812', brand: 'Visa', inst: 10, shipping: 15 };
+    const user = store.get('user', { name: 'Davy Jones', email: 'davy.jones@exemplo.com' });
+    const d = new Date(); const tom = new Date(Date.now() + 864e5);
+    const fm = x => x.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' });
+    const payLbl = o.pay === 'pix' ? 'PIX' : o.pay === 'apple' ? 'Apple Pay' : `Cartão de Crédito`;
+    $('#conf').innerHTML = `<div class="wrap" style="padding-top:20px">
+    <a class="back" href="index.html">${icon('left', 16)} Voltar ao início</a>
+    <div class="ok-hero"><div class="big">${icon('check')}<i>${icon('check')}</i></div><div><span class="st">PAGAMENTO BEM-SUCEDIDO</span><h1>Pedido Confirmado!</h1><p>Seu pedido <b>#${o.id}</b> foi registrado com sucesso. Enviamos a documentação fiscal e chave de acesso para <b>${user.email || 'davy.jones@exemplo.com'}</b>.</p></div>
+      <div class="acts"><a class="btn" href="rastreamento.html">${icon('pin', 14)} Rastrear envio</a><a class="btn soft" href="#">${icon('down2', 14)} Recibo &amp; DANFE (PDF)</a></div></div>
+    <div class="cf"><div>
+      <div class="box"><h3>${icon('truck', 20)} STATUS EM TEMPO REAL <span class="count">EM PREPARAÇÃO NO ATELIER</span></h3>
+        <div class="track"><div class="s done"><span class="c">${icon('check', 16)}</span><b>Realizado</b><small>Hoje, ${d.toTimeString().slice(0, 5)}</small></div><div class="s done"><span class="c" style="background:#000;color:#fff">●</span><b>Atelier</b><small>Inspeção &amp; Dobra</small></div><div class="s"><span class="c">${icon('navi', 15)}</span><b>Em Trânsito</b><small>Previsão 14h</small></div><div class="s"><span class="c">${icon('home', 15)}</span><b>Entregue</b><small>Portaria</small></div></div>
+        <div class="eta">${icon('clock', 20)}<div><small>Previsão de chegada</small><b>Amanhã, ${fm(tom)} — até às 18:00</b></div><em>⚡ Prioritário</em></div></div>
+      <div class="box"><h3>${icon('pin', 20)} DETALHES DA ENTREGA</h3><div class="dgrid">
+        <div><small>Destinatário &amp; Endereço</small><b>${user.name}</b><br>Av. Paulista, 1000 — Apto 84<br>Edifício Horizon — Bela Vista<br>São Paulo, SP — CEP 01310-100</div>
+        <div><small>Modalidade selecionada</small><div style="display:flex;justify-content:space-between"><b>${o.method === 'express' ? 'Serviço Expresso Dedicado' : 'Entrega Padrão'}</b><b style="font-size:12px">${brl(o.shipping)}</b></div><span style="font-size:11px;color:#555">Veículo blindado com rastreamento GPS e controle térmico de embalagem têxtil.</span><div class="trk"><span><small style="margin:0">Código Fedex</small>BR-9842103584-VT</span><button class="btn soft sm" id="cpy">${icon('copy', 12)} Copiar</button></div></div></div></div>
+      <div class="dark-help"><div><b>Dúvidas sobre o pedido?</b><small>Fale diretamente com nosso Suporte.</small></div><a class="btn white sm" href="#" style="height:44px">${icon('msg', 14)} WhatsApp</a></div>
+    </div><div>
+      <div class="box"><div class="paid"><h3>RESUMO DO PAGAMENTO</h3><span class="tag">● PAGO</span></div>
+        <div class="cardline"><span class="lg">${o.pay === 'card' ? (o.brand || 'VISA').toUpperCase() : o.pay.toUpperCase()}</span><div><b>${payLbl}</b><small>${o.pay === 'card' ? `Final •••• ${o.card} (${o.inst}x sem juros)` : 'Pagamento aprovado'}</small></div><span style="margin-left:auto;color:var(--green)">${icon('shield', 18)}</span></div>
+        <div class="tot"><div><b style="font-size:14px">Total Pago</b><small>Valor líquido processado</small></div><b>${brl(o.total)}</b></div>
+        <a class="btn" href="#">${icon('pkg', 14)} Ver todos meus pedidos</a><a class="btn soft" href="colecao.html">${icon('bag', 14)} Continuar comprando</a></div>
+      <div class="box guar"><h3>GARANTIA VESTTA</h3>
+        <div class="r"><span class="ic">${icon('shield', 18)}</span><div><b>Chip NFC de Autenticidade</b>Cada peça vem com tag digital costurada internamente. Aproxime seu smartphone para conferir a tiragem e série do lote.</div></div>
+        <div class="r"><span class="ic">${icon('repeat', 18)}</span><div><b>Troca Rápida em 30 Dias</b>O caimento não ficou perfeito? Coletamos gratuitamente no seu endereço sem qualquer complicação ou custo adicional.</div></div>
+        <div class="r"><span class="ic">${icon('lock', 18)}</span><div><b>Embalagem Antiviolação</b>Lacre holográfico exclusivo que atesta a inviolabilidade do pacote desde o nosso centro de distribuição até suas mãos.</div></div></div>
+    </div></div>
+    <div class="sec" style="padding-top:40px"><div class="sec-head"><div><div class="label" style="letter-spacing:.14em">Complemente seu estilo</div><h2 class="h2">Peças curadas do Drop 04</h2></div><a class="btn soft sm" href="colecao.html" style="background:none">Ver coleção completa ${icon('right', 14)}</a></div>
+      <div class="grid c4" id="conf-grid"></div></div></div>`;
+    $('#conf-grid').innerHTML = PRODUCTS.slice(0, 4).map(p => productCard(p)).join(''); bindCards($('#conf-grid'));
+    $('#cpy').onclick = () => { navigator.clipboard && navigator.clipboard.writeText('BR-9842103584-VT').catch(() => { }); toast('Código copiado'); };
+};
+
+// conta (login / cadastro / verificação 2FA)
+pages.conta = () => {
+    const VIEWS = { login: 'Entrar', cadastro: 'Criar conta', verificacao: 'Verificação' };
+    let view = 'login', code = '', t = 46;
+    const cells = $$('.codes .c');
+    const drawCode = () => cells.forEach((c, i) => { c.textContent = code[i] || ''; c.classList.toggle('act', i === Math.min(code.length, 3)); c.classList.toggle('has', !!code[i]); });
+    const pending = () => store.get('pending', { email: 'davy.jones@vestta.atelier', name: 'Davy Jones' });
+    const show = () => {
+        const h = location.hash.slice(1); view = VIEWS[h] ? h : 'login';
+        $$('[data-view]').forEach(s => s.hidden = s.dataset.view !== view);
+        document.title = VIEWS[view] + ' — VESTTA'; window.scrollTo(0, 0);
+        const mt = $('.mbar .t'); if (mt) mt.textContent = { login: 'Login', cadastro: 'Cadastro', verificacao: 'Verificação OTP' }[view];
+        if (view === 'verificacao') { code = ''; t = 46; drawCode(); $$('.em').forEach(e => e.textContent = pending().email); }
+    };
+    window.addEventListener('hashchange', show);
+
+    const toggle = (btn, input) => btn.onclick = () => { input.type = input.type === 'password' ? 'text' : 'password'; btn.innerHTML = icon(input.type === 'password' ? 'eye' : 'eyeoff'); };
+    const social = () => $$('.social button').forEach(b => b.onclick = () => { store.set('user', { name: 'Davy Jones', email: 'davy.jones@exemplo.com' }); location.href = 'index.html'; });
+    social();
+
+    // login
+    toggle($('#lg-toggle'), $('#lg-pw'));
+    $('#lg-form').onsubmit = e => {
+        e.preventDefault(); const em = $('#lg-email').value.trim(), pw = $('#lg-pw').value;
+        const okE = /^\S+@\S+\.\S+$/.test(em);
+        $('#lg-email').closest('.in').classList.toggle('err', !okE); $('#lg-pw').closest('.in').classList.toggle('err', pw.length < 6);
+        if (!okE || pw.length < 6) return toast('Verifique e-mail e senha');
+        store.set('pending', { email: em, name: em.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) });
+        location.hash = 'verificacao';
+    };
+
+    // cadastro
+    const pw = $('#cd-pw');
+    const score = v => [v.length >= 8, /[A-Z]/.test(v), /\d/.test(v), /[^\w\s]/.test(v)].filter(Boolean).length;
+    const upd = () => { const s = score(pw.value); $$('.strength i').forEach((b, i) => b.classList.toggle('on', i < s)); $('#str').textContent = ['', 'FRACA', 'MÉDIA', 'BOA', 'FORTE'][s] || ''; };
+    pw.oninput = upd; upd(); toggle($('#cd-toggle'), pw);
+    $('#cd-form').onsubmit = e => {
+        e.preventDefault(); const n = $('#cd-nome').value.trim(), em = $('#cd-email').value.trim();
+        const bad = [n.length < 2, !/^\S+@\S+\.\S+$/.test(em), pw.value.length < 8, !$('#cd-terms').checked];
+        $('#cd-nome').closest('.in').classList.toggle('err', bad[0]); $('#cd-email').closest('.in').classList.toggle('err', bad[1]); pw.closest('.in').classList.toggle('err', bad[2]);
+        if (bad.includes(true)) return toast(bad[3] && !bad[0] && !bad[1] && !bad[2] ? 'Aceite os termos para continuar' : 'Revise os campos do cadastro');
+        store.set('pending', { email: em, name: n }); location.hash = 'verificacao';
+    };
+
+    // verificação
+    const press = k => { if (view !== 'verificacao') return; if (k === 'x') code = code.slice(0, -1); else if (code.length < 4) code += k; drawCode(); };
+    $$('.keypad button').forEach(b => b.onclick = () => b.dataset.k && press(b.dataset.k));
+    document.addEventListener('keydown', e => { if (view !== 'verificacao') return; if (/^\d$/.test(e.key)) press(e.key); else if (e.key === 'Backspace') press('x'); else if (e.key === 'Enter') $('#confirm').click(); });
+    const tick = () => { const s = '00:' + String(t).padStart(2, '0'); $$('.timer').forEach(x => x.textContent = s); $('#tbar').style.width = (t / 46 * 100) + '%'; if (t > 0) t--; };
+    tick(); setInterval(tick, 1000);
+    $('#resend').onclick = e => { e.preventDefault(); if (t > 0) return toast('Aguarde o contador'); t = 46; code = ''; drawCode(); toast('Novo código enviado'); };
+    $('#confirm').onclick = () => {
+        if (code.length < 4) return toast('Digite os 4 dígitos do código');
+        const p = pending(); store.set('user', { name: p.name, email: p.email }); store.del('pending');
+        location.href = new URLSearchParams(location.search).get('next') || 'index.html';
+    };
+    show();
+};
+
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

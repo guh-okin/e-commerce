@@ -2123,3 +2123,562 @@ input[type=range] {
     margin-bottom: 22px
 }
 
+/* checkout */
+.steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    padding: 18px;
+    max-width: 1000px;
+    margin: 6px auto 26px
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: 12px
+}
+
+.step .n {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #000;
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 700
+}
+
+.step small {
+    display: block;
+    font-size: 8.5px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted)
+}
+
+.step b {
+    font-size: 14px
+}
+
+.step.todo .n {
+    background: var(--soft);
+    color: #aaa
+}
+
+.step.todo b {
+    color: #aaa
+}
+
+.steps .ln {
+    flex: 1;
+    height: 2px;
+    background: #000;
+    max-width: 250px
+}
+
+.steps .ln.off {
+    background: #e4e4e4
+}
+
+.co {
+    display: grid;
+    grid-template-columns: 1fr 394px;
+    gap: 24px;
+    padding-bottom: 50px;
+    align-items: start
+}
+
+.co .box {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 24px;
+    margin-bottom: 20px
+}
+
+.co .box>h3 {
+    font-size: 15px;
+    letter-spacing: .06em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px
+}
+
+.co .box>h3 .acts {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    gap: 12px;
+    text-transform: uppercase
+}
+
+.addr {
+    display: flex;
+    gap: 14px;
+    background: var(--soft);
+    border-radius: 14px;
+    padding: 16px
+}
+
+.addr .ic {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #fff;
+    display: grid;
+    place-items: center;
+    flex: none
+}
+
+.addr b {
+    font-size: 15px
+}
+
+.addr p {
+    font-size: 12px;
+    color: #333;
+    margin-top: 6px;
+    line-height: 1.6
+}
+
+.addr small {
+    display: block;
+    font-size: 9.5px;
+    color: var(--muted);
+    letter-spacing: .06em;
+    margin-top: 6px;
+    text-transform: uppercase
+}
+
+.addr .edit {
+    margin-left: auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #fff;
+    display: grid;
+    place-items: center
+}
+
+.ship-opts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px
+}
+
+.opt {
+    display: block;
+    border-radius: 14px;
+    background: #fff;
+    padding: 18px;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 1px #eee;
+    transition: .2s
+}
+
+.opt.on {
+    background: var(--soft);
+    box-shadow: none
+}
+
+.opt .t {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 14px
+}
+
+.opt .t em {
+    margin-left: auto;
+    font-style: normal;
+    font-weight: 600
+}
+
+.opt .r {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #e6e6e6;
+    display: grid;
+    place-items: center
+}
+
+.opt.on .r {
+    background: #000
+}
+
+.opt.on .r:after {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #fff
+}
+
+.opt small {
+    display: block;
+    margin: 8px 0 0 30px;
+    font-size: 11px;
+    color: #555
+}
+
+.opt .fast {
+    background: #e0e0e0;
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    padding: 3px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    text-transform: uppercase
+}
+
+.paytabs {
+    display: inline-flex;
+    background: var(--soft);
+    border-radius: var(--pill);
+    padding: 5px;
+    margin-bottom: 20px
+}
+
+.paytabs button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 20px;
+    border-radius: var(--pill);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #555
+}
+
+.paytabs button.on {
+    background: #000;
+    color: #fff
+}
+
+.saved {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 22px
+}
+
+.scard {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--soft);
+    border-radius: 14px;
+    padding: 14px 16px;
+    cursor: pointer;
+    opacity: .7
+}
+
+.scard.on {
+    opacity: 1
+}
+
+.scard .lg {
+    width: 48px;
+    height: 34px;
+    border-radius: 7px;
+    background: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: #1a1f71
+}
+
+.scard b {
+    font-size: 14px;
+    display: flex;
+    gap: 8px;
+    align-items: center
+}
+
+.scard small {
+    font-size: 11px;
+    color: #555
+}
+
+.scard .ck {
+    margin-left: auto;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #e2e2e2;
+    display: grid;
+    place-items: center;
+    color: #fff
+}
+
+.scard.on .ck {
+    background: #000
+}
+
+.field {
+    margin-bottom: 16px
+}
+
+.field label {
+    display: block;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: 8px
+}
+
+.field .in {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--soft);
+    border-radius: 12px;
+    padding: 0 16px;
+    height: 48px;
+    border: 1px solid transparent
+}
+
+.field .in:focus-within {
+    border-color: #000;
+    background: #fff
+}
+
+.field .in.err {
+    border-color: var(--accent)
+}
+
+.field input,
+.field select {
+    flex: 1;
+    border: 0;
+    background: none;
+    outline: 0;
+    font-size: 15px;
+    letter-spacing: .06em;
+    width: 100%;
+    height: 100%
+}
+
+.field .in svg {
+    color: #555
+}
+
+.field .in select {
+    letter-spacing: 0;
+    appearance: none
+}
+
+.two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px
+}
+
+.field .sub {
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 8px;
+    display: block
+}
+
+.toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--soft);
+    border-radius: 12px;
+    padding: 0 16px;
+    height: 48px;
+    font-weight: 600;
+    font-size: 14px
+}
+
+.sw-t {
+    position: relative;
+    width: 52px;
+    height: 30px;
+    border-radius: 15px;
+    background: #d4d4d4;
+    transition: .2s;
+    flex: none
+}
+
+.sw-t:after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #fff;
+    transition: .2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .25)
+}
+
+.sw-t.on {
+    background: #000
+}
+
+.sw-t.on:after {
+    left: 25px
+}
+
+.pay-pane {
+    display: none
+}
+
+.pay-pane.on {
+    display: block
+}
+
+.pixbox {
+    background: var(--soft);
+    border-radius: 14px;
+    padding: 26px;
+    text-align: center
+}
+
+.pixbox .qr {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 14px;
+    background:
+        conic-gradient(#000 25%, #fff 0 50%, #000 0 75%, #fff 0) 0 0/20px 20px;
+    border: 10px solid #fff;
+    border-radius: 10px
+}
+
+.pixbox p {
+    font-size: 12px;
+    color: #444
+}
+
+.mini {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 16px;
+    align-items: center
+}
+
+.mini .im {
+    width: 64px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex: none
+}
+
+.mini b {
+    display: block;
+    font-size: 14px
+}
+
+.mini small {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    margin: 3px 0
+}
+
+.mini span {
+    font-weight: 700
+}
+
+.coupon-row {
+    margin-top: 8px
+}
+
+.coupon-row .lb {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px
+}
+
+.coupon-row .lb b {
+    color: var(--accent)
+}
+
+.coupon-row .bx {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--soft);
+    border-radius: 14px;
+    padding: 12px
+}
+
+.coupon-row .ic {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--accent);
+    display: grid;
+    place-items: center
+}
+
+.coupon-row small {
+    display: block;
+    color: var(--accent);
+    font-size: 11px
+}
+
+.coupon-row em {
+    background: #e0e0e0;
+    font-style: normal;
+    font-size: 8px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin-left: 6px
+}
+
+.coupon-row a {
+    margin-left: auto;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-decoration: underline
+}
+
+.pack {
+    display: flex;
+    gap: 12px;
+    background: var(--soft);
+    border-radius: 14px;
+    padding: 14px;
+    margin-top: 16px;
+    font-size: 11.5px
+}
+
+.pack b {
+    display: block;
+    font-size: 14px
+}
+
+.pack span {
+    color: #555
+}
