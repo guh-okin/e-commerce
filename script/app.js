@@ -752,3 +752,116 @@ pages.configuracoes = () => {
         }
     });
 };
+
+// favoritos
+pages.favoritos = () => {
+    if (store.get('favs', null) === null) store.set('favs', ['chunky-runner-black', 'bomber-street-jacket', 'black-statement-hoodie', 'boxy-slogan-tee', 'tech-cargo-pants', 'utility-track-jacket', 'heavyweight-hoodie', 'oversized-logo-tee']);
+    const root = $('#fav'); let cat = 'todos', sort = 'recentes';
+    const NAMES = { camisetas: 'Camisetas', moletons: 'Moletons', jaquetas: 'Jaquetas', calcas: 'Calças', tenis: 'Calçados', acessorios: 'Acessórios' };
+    const user = store.get('user', null);
+    function draw() {
+        const ids = store.get('favs', []);
+        const all = ids.slice().reverse().map(byId).filter(Boolean);
+        const count = k => all.filter(p => p.cat === k).length;
+        if (cat !== 'todos' && !count(cat)) cat = 'todos';
+        let list = all.filter(p => cat === 'todos' || p.cat === cat);
+        if (sort === 'menor') list.sort((a, b) => a.price - b.price);
+        if (sort === 'maior') list.sort((a, b) => b.price - a.price);
+        if (sort === 'avaliacao') list.sort((a, b) => b.rating - a.rating);
+        const chips = `<button class="chip ${cat === 'todos' ? 'on' : ''}" data-cat="todos">Todos (${all.length})</button>` + Object.keys(NAMES).filter(count).map(k => `<button class="chip ${cat === k ? 'on' : ''}" data-cat="${k}">${NAMES[k]} (${count(k)})</button>`).join('');
+        const card = p => `<article class="pcard fcard" data-id="${p.id}">
+      <a class="img" href="produto.html?id=${p.id}">${p.tag ? `<span class="tag ${p.tagRed ? 'red' : ''}">${p.tag}</span>` : ''}${pic(p)}</a>
+      <button class="fav on" data-unfav="${p.id}" aria-label="Remover dos favoritos">${icon('heart', 17)}</button>
+      <div class="meta"><span>${p.colors.join(' / ')}</span><b>${icon('star')}${p.rating.toFixed(1)} (${p.reviews})</b></div>
+      <a class="name" href="produto.html?id=${p.id}" style="display:block">${p.name}</a>
+      <div class="row"><span class="price">${brl(p.price)}${p.old ? `<s>${brl(p.old)}</s>` : ''}</span></div>
+      <button class="btn mv" data-mv="${p.id}">${icon('bag', 15)} Mover p/ sacola</button></article>`;
+        root.innerHTML = `<div class="wrap fav-page">
+      <div class="crumbs"><a href="index.html">Início</a><span>/</span><a href="perfil.html">Minha conta</a><span>/</span><b>Meus favoritos</b></div>
+      <div class="mfh mo"><button type="button" class="mb" data-back aria-label="Voltar">${icon('left', 22)}</button><h1>Meus Favoritos <span class="count">${all.length} itens</span></h1><span class="mr"><button type="button" class="mb" data-share aria-label="Compartilhar">${icon('share', 19)}</button><a class="av-m" href="${user ? 'perfil.html' : 'conta.html#login'}">${user ? initialsOf(user.name) : icon('user', 17)}</a></span></div>
+      <h1 class="ftitle dk">MEUS FAVORITOS <span class="count">${all.length} itens</span></h1>
+      <p class="fsub">Peças reservadas e salvas na sua curadoria pessoal VESTTA Atelier.</p>
+      <div class="ftool"><div class="chips">${chips}</div><label class="fsort"><span>Ordenar por:</span><select id="fsort"><option value="recentes">Adicionados Recentemente</option><option value="menor">Menor preço</option><option value="maior">Maior preço</option><option value="avaliacao">Melhor avaliação</option></select></label></div>
+      ${list.length ? `<div class="grid c4 fgrid">${list.map(card).join('')}</div>` : `<div class="empty"><h2 class="h2">Nenhuma peça salva</h2><p>Toque no coração dos produtos para guardar seus favoritos aqui.</p><a class="btn" href="colecao.html">Explorar coleção ${icon('right', 16)}</a></div>`}
+      <div class="resv mo"><span class="ic">${icon('timer', 18)}</span><div><b>Reserva Temporária de Estoque</b><p>Dica: Seus itens favoritados ficam protegidos por até 48 horas caso restem menos de 3 peças em nosso estoque.</p></div></div></div>`;
+        $('#fsort').value = sort;
+        $('#fsort').onchange = e => { sort = e.target.value; draw(); };
+        $$('.chip', root).forEach(c => c.onclick = () => { cat = c.dataset.cat; draw(); });
+        $$('[data-unfav]', root).forEach(b => b.onclick = () => { store.set('favs', store.get('favs', []).filter(i => i !== b.dataset.unfav)); updateBadges(); toast('Removido dos favoritos'); draw(); });
+        $$('[data-mv]', root).forEach(b => b.onclick = () => { addToCart(b.dataset.mv); store.set('favs', store.get('favs', []).filter(i => i !== b.dataset.mv)); updateBadges(); toast('Movido para a sacola'); draw(); });
+        $$('[data-back]', root).forEach(b => b.onclick = () => history.length > 1 ? history.back() : (location.href = 'index.html'));
+        $$('[data-share]', root).forEach(b => b.onclick = () => { navigator.clipboard && navigator.clipboard.writeText(location.href).catch(() => { }); toast('Link copiado'); });
+        updateBadges();
+    }
+    draw();
+};
+
+// rastreamento
+const rng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+function mapSvg() {
+    const r = rng(11); let thin = '';
+    for (let i = 0; i < 28; i++) { const x = -60 + i * 30 + r() * 12; thin += `<path d="M${x.toFixed(0)} -20 L${(x + 190 + r() * 40).toFixed(0)} 580"/>`; }
+    for (let i = 0; i < 22; i++) { const y = -20 + i * 28 + r() * 10; thin += `<path d="M-20 ${y.toFixed(0)} L730 ${(y + 150 - r() * 60).toFixed(0)}"/>`; }
+    const avenues = ['M-20 430 C150 390 300 310 460 255 S650 130 740 70', 'M-20 160 C120 190 250 175 380 230 S600 330 740 360', 'M120 -20 C170 120 220 260 300 420 S380 540 420 580', 'M520 -20 C500 120 560 230 600 330 S650 480 690 580'];
+    const lbl = (x, y, t, s = 11) => `<text x="${x}" y="${y}" font-size="${s}" letter-spacing="1.6" fill="#8c8c8c">${t}</text>`;
+    return `<svg class="map" viewBox="0 0 708 540" preserveAspectRatio="xMidYMid slice" aria-label="Mapa da rota de entrega"><rect width="708" height="540" fill="#e8e8e8"/>
+    <g id="mapg"><g fill="#dadcd6"><path d="M40 250q50-40 110-10t30 60q-60 40-130 10z"/><path d="M430 60q70-30 120 10t-20 70q-90 20-100-80z"/><path d="M560 400q50-20 90 10t-10 60q-70 10-80-70z"/></g>
+    <g fill="none" stroke="#f7f7f7" stroke-width="1.4">${thin}</g>
+    <g fill="none" stroke="#d3d3d3" stroke-width="8" stroke-linecap="round">${avenues.map(a => `<path d="${a}"/>`).join('')}</g>
+    <g fill="none" stroke="#fff" stroke-width="5.500" stroke-linecap="round">${avenues.map(a => `<path d="${a}"/>`).join('')}</g>
+    ${lbl(330, 20, 'CACHOEIRINHA')}${lbl(270, 75, 'SANTANA')}${lbl(120, 205, 'LAPA')}${lbl(420, 190, 'BRÁS')}${lbl(520, 205, 'TATUAPÉ')}${lbl(60, 330, 'VILA MADALENA')}${lbl(170, 395, 'PINHEIROS')}${lbl(300, 400, 'ITAIM BIBI')}${lbl(400, 470, 'VILA MARIANA')}${lbl(500, 395, 'PARAÍSO')}${lbl(560, 500, 'SÃO CAETANO')}
+    <text x="215" y="320" font-size="30" font-weight="700" fill="#555" letter-spacing="-.5">São Paulo</text>
+    <path id="route" d="M120 110 C250 160 330 215 385 290 S500 400 545 440" fill="none" stroke="#111" stroke-width="3.500" stroke-dasharray="7 7" stroke-linecap="round"/>
+    <g transform="translate(120 110)"><circle r="7" fill="#111" stroke="#fff" stroke-width="3"/><g transform="translate(14 -34)"><rect width="112" height="26" rx="13" fill="#fff" stroke="#e2e2e2"/><text x="14" y="17" font-size="10" font-weight="700" letter-spacing="1">CENTRO CD</text></g></g>
+    <g transform="translate(545 440)"><circle r="11" fill="#111" stroke="#fff" stroke-width="3"/><g transform="translate(-136 12)"><rect width="128" height="26" rx="13" fill="#111"/><text x="16" y="17" font-size="10" font-weight="700" letter-spacing="1" fill="#fff">SEU ENDEREÇO</text></g></g>
+    <g id="truck"><circle r="25" fill="#111" stroke="#fff" stroke-width="3"/><g transform="translate(-12 -12)" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${P.truck}</g>
+      <g transform="translate(0 42)"><rect x="-42" y="-12" width="84" height="24" rx="12" fill="#111"/><circle cx="-27" cy="0" r="3.500" fill="#22c55e"/><text x="-17" y="4" font-size="10" font-weight="700" fill="#fff" letter-spacing="1">EM ROTA</text></g></g></g></svg>`;
+}
+pages.rastreamento = () => {
+    const root = $('#trk');
+    const real = store.get('order', null);
+    const id = (real && real.id) || 'ORD-89421';
+    const its = (real && (real.items || []).length ? real.items : [{ id: 'boxy-slogan-tee', color: 'Preto', size: 'M', qty: 1 }, { id: 'wide-cargo-onyx', color: 'Ônix', size: '42', qty: 1 }]).filter(i => byId(i.id));
+    const nm = its.map(i => byId(i.id).name);
+    const user = store.get('user', null);
+    const step = (cls, ic, t, tm, d) => `<div class="ts ${cls}"><span class="dotc">${icon(ic, 14)}</span><div class="tx"><b>${t}${cls === 'act' ? ' <i class="gd"></i>' : ''}</b><small>${d}</small></div><time>${tm}</time></div>`;
+    root.innerHTML = `<div class="wrap trkpg">
+    <div class="crumbs"><a href="index.html">Início</a><span>/</span><a href="perfil.html#pedidos">Meus Pedidos</a><span>/</span><b>Rastrear #${id}</b></div>
+    <div class="trk-head dk"><div><h1>RASTREAR PEDIDO #${id}</h1><span class="tag big"><i class="gd"></i> Em trânsito // Entrega expressa</span></div>
+      <div class="eta2"><span class="tic">${icon('truck', 22)}</span><div><small>Chegada estimada</small><b>Hoje, até às 18:00 (~<i class="eta-m">18</i> min)</b></div></div></div>
+    <div class="trk-grid">
+      <section class="mapcard">${mapSvg()}
+        <div class="mchip"><i class="rd"></i> Chegada em aprox. <span class="eta-m">18</span> min</div>
+        <div class="mctl"><button type="button" id="mloc" aria-label="Centralizar">${icon('navi', 18)}</button><button type="button" id="mtr" aria-label="Trânsito">${icon('traffic', 18)}</button><div class="zoom"><button type="button" id="zin" aria-label="Aproximar">${icon('plus', 17)}</button><button type="button" id="zout" aria-label="Afastar">${icon('minus', 17)}</button></div></div>
+        <div class="mbar2"><span><i class="gd"></i> TRÂNSITO FLUIDO <em>•</em> <span class="mut">Trajeto via Av. Rebouças</span></span><span class="mut">Distância: <b id="dist">3.8</b> km restantes</span></div></section>
+      <div class="mhead mo"><div><small class="label">Código de envio <span class="exp">Expresso</span></small><h2>#${id}</h2></div><div class="r"><span class="tag big">● Em trânsito</span><small>Previsão: Hoje, 18:00</small></div></div>
+      <aside class="trk-side">
+        <div class="tcard pp"><div class="th"><span class="ic">${icon('pin', 20)}</span><div><small class="label">Ponto de entrega</small><b>Av. Paulista, 1000 • Apt 84</b><small>Bela Vista, São Paulo — SP <span class="dk">• CEP 01310-100</span></small></div><a class="ins" href="#">Instruções</a></div>
+          <div class="note dk">${icon('help', 14)} Instrução ativa: "Deixar na portaria com identificação civil."</div></div>
+        <div class="tcard prog"><div class="th"><h3>PROGRESSO <span class="dk">DO ENVIO</span><span class="mo">DA ENTREGA</span></h3><span class="pill2">Etapa 3 de 4</span></div>
+          <div class="tls">${step('done', 'check', 'Pedido Confirmado', '10:24', 'Pagamento aprovado e registrado no hub central VESTTA.')}${step('done', 'check', 'Pacote Preparado e Embalado', '13:10', 'Conferência de qualidade no Centro de Distribuição Pinheiros.')}${step('act', 'navi', 'Em Trânsito com Entregador', '15:45', 'Lucas coletou seu pacote e está em deslocamento até seu endereço.')}${step('pend', 'pkg', 'Entrega no Endereço', 'Hoje, ~18:00', 'Requer confirmação de recebimento com o código PIN 5821.')}</div></div>
+        <div class="tcard courier mo"><div class="cr"><span class="cav">LM<i>${icon('star', 9)}</i></span><div><b>Lucas Mendes ${icon('verified', 15)}</b><small>Entregador Parceiro • 4.9 (1.240 entregas)</small></div><span class="moto">Moto CG</span></div>
+          <div class="cact"><span class="plate">${icon('idcard', 16)} STR-2025</span><a class="btn soft" href="#">${icon('msg', 15)} Mensagem</a><a class="btn" href="tel:+5511988224411">${icon('phone', 15)} Ligar</a></div></div>
+        <div class="tcard acc2"><button type="button" class="ah" id="itbtn"><span class="thm">${pic(byId(its[0].id), '')}<em>${its.reduce((a, i) => a + i.qty, 0)}</em></span><div><b class="dk">Itens neste Pacote</b><b class="mo">Ver Itens do Pedido (${its.reduce((a, i) => a + i.qty, 0)} ${its.length > 1 || its[0].qty > 1 ? 'itens' : 'item'})</b><small class="dk">${nm[0]}</small><small class="mo">${nm.join(' + ')}</small></div>${icon('down', 18)}</button>
+          <div class="ab">${its.map(i => { const p = byId(i.id); return `<div class="oi"><span class="th">${pic(p, '')}</span><div><b>${p.name}</b><small>${i.color} • Tam ${i.size} • Qtd ${i.qty}</small></div></div>`; }).join('')}</div></div>
+        <div class="tcard supp dk"><span class="ic">${icon('headset', 20)}</span><div><b>Precisa de suporte com o pacote?</b><small>Suporte VESTTA disponível 24h para assistência.</small></div><a class="btn white sm" href="#">Falar ${icon('right', 13)}</a></div>
+        <p class="safe mo">${icon('shield', 15)} Entrega protegida com código de segurança de 4 dígitos</p>
+      </aside></div></div>`;
+    noHash(root);
+    // animação da rota
+    const path = $('#route'), L = path.getTotalLength(), truck = $('#truck'); let p = .45, z = 1;
+    const place = () => {
+        const pt = path.getPointAtLength(L * p); truck.setAttribute('transform', `translate(${pt.x.toFixed(1)} ${pt.y.toFixed(1)})`);
+        const rest = (1 - p) / .55; const m = Math.max(1, Math.round(rest * 18));
+        $$('.eta-m', root).forEach(e => e.textContent = m); $('#dist').textContent = (rest * 3.8).toFixed(1);
+    };
+    const zoom = () => $('#mapg').setAttribute('transform', `translate(354 270) scale(${z}) translate(-354 -270)`);
+    place();
+    setInterval(() => { if (p < .96) { p += .004; place(); } }, 3000);
+    $('#zin').onclick = () => { z = Math.min(1.6, z + .2); zoom(); };
+    $('#zout').onclick = () => { z = Math.max(.8, z - .2); zoom(); };
+    $('#mloc').onclick = () => { z = 1; zoom(); toast('Mapa centralizado na entrega'); };
+    $('#mtr').onclick = () => toast('Trânsito fluido na rota');
+    $('#itbtn').onclick = () => $('.acc2').classList.toggle('open');
+    const mb = $('#mback'); if (mb) mb.onclick = () => history.length > 1 ? history.back() : (location.href = 'perfil.html');
+};
