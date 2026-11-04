@@ -865,3 +865,129 @@ pages.rastreamento = () => {
     $('#itbtn').onclick = () => $('.acc2').classList.toggle('open');
     const mb = $('#mback'); if (mb) mb.onclick = () => history.length > 1 ? history.back() : (location.href = 'perfil.html');
 };
+
+// dados pessoais / endereços / pagamentos
+const fld = (id, label, val, o = {}) => `<label class="fld ${o.w || ''}"><span>${label}</span><input id="${id}" value="${esc(val || '')}" ${o.type ? `type="${o.type}"` : ''} ${o.ph ? `placeholder="${o.ph}"` : ''} ${o.max ? `maxlength="${o.max}"` : ''} ${o.mode ? `inputmode="${o.mode}"` : ''} ${o.ro ? 'readonly' : ''}></label>`;
+const pageHead = (ic, kicker, t, p) => `<section class="card shead"><span class="sic">${icon(ic, 24)}</span><div><small>${kicker}</small><h1>${t}</h1><p>${p}</p></div></section>`;
+const maskDigits = (v, pat) => { let d = v.replace(/\D/g, ''), o = '', i = 0; for (const c of pat) { if (i >= d.length) break; o += c === '#' ? d[i++] : c; } return o; };
+const bindMask = (el, pat) => el && el.addEventListener('input', () => { el.value = maskDigits(el.value, pat); });
+
+pages.dados = () => {
+    const u = store.get('user', {}); const pr = { phone: '(11) 98822-4411', cpf: '123.456.789-09', birth: '1998-04-12', gender: 'Prefiro não informar', ...store.get('profile', {}) };
+    accountPage({
+        active: 'dados', crumb: 'Dados pessoais', noTop: true, mobTop: false, mobSide: false,
+        inner: () => `${pageHead('idcard', 'Minha conta', 'Dados Pessoais', 'Mantenha suas informações atualizadas para entregas e pagamentos mais rápidos.')}
+      <section class="card sset"><div class="sh"><h3>${icon('user', 20)} INFORMAÇÕES BÁSICAS</h3><small>Obrigatórias</small></div>
+        <div class="fgrid2">${fld('f-name', 'Nome completo', u.name, { w: 'full' })}${fld('f-email', 'E-mail', u.email, { type: 'email' })}${fld('f-phone', 'Telefone / WhatsApp', pr.phone, { mode: 'numeric', max: 15 })}
+        ${fld('f-cpf', 'CPF', pr.cpf, { mode: 'numeric', max: 14 })}${fld('f-birth', 'Data de nascimento', pr.birth, { type: 'date' })}
+        <label class="fld"><span>Gênero</span><select id="f-gender">${['Prefiro não informar', 'Feminino', 'Masculino', 'Outro'].map(g => `<option ${g === pr.gender ? 'selected' : ''}>${g}</option>`).join('')}</select></label></div>
+        <p class="ferr" id="ferr"></p></section>
+      <section class="card sset"><div class="sh"><h3>${icon('lock', 20)} SENHA &amp; SEGURANÇA</h3></div>
+        <div class="srow"><span class="ico">${icon('refresh', 18)}</span><div class="tx"><b>Alterar senha</b><small>Enviaremos um link seguro para o seu e-mail</small></div><button type="button" class="btn white sm" id="pw">Enviar link</button></div></section>
+      <section class="card sset danger"><div class="sh"><h3>${icon('trash', 20)} ZONA DE RISCO</h3></div>
+        <div class="srow"><div class="tx"><b>Excluir minha conta</b><small>Esta ação remove seus dados deste dispositivo e encerra a sessão.</small></div><button type="button" class="btn white sm dgr" id="del">Excluir conta</button></div></section>
+      <div class="sact"><span></span><div class="r"><button type="button" class="btn white" id="dcancel">Cancelar</button><button type="button" class="btn" id="dsave">Salvar dados ${icon('check', 15)}</button></div></div>`,
+        bind: root => {
+            bindMask($('#f-phone', root), '(##) #####-####'); bindMask($('#f-cpf', root), '###.###.###-##');
+            $('#pw', root).onclick = () => toast('Enviamos um link de redefinição para o seu e-mail');
+            $('#dcancel', root).onclick = () => location.href = 'perfil.html';
+            $('#del', root).onclick = () => { if (confirm('Excluir sua conta e encerrar a sessão?')) { ['user', 'profile', 'addrs', 'cards', 'settings'].forEach(store.del); location.href = 'index.html'; } };
+            $('#dsave', root).onclick = () => {
+                const g = i => $('#' + i, root).value.trim(), er = $('#ferr', root);
+                if (g('f-name').split(/\s+/).length < 2) return er.textContent = 'Informe nome e sobrenome.';
+                if (!/^\S+@\S+\.\S+$/.test(g('f-email'))) return er.textContent = 'Informe um e-mail válido.';
+                if (g('f-phone').replace(/\D/g, '').length < 10) return er.textContent = 'Informe um telefone com DDD.';
+                if (g('f-cpf').replace(/\D/g, '').length !== 11) return er.textContent = 'O CPF deve ter 11 dígitos.';
+                er.textContent = '';
+                store.set('user', { ...u, name: g('f-name'), email: g('f-email') });
+                store.set('profile', { phone: g('f-phone'), cpf: g('f-cpf'), birth: g('f-birth'), gender: g('f-gender') });
+                toast('Dados atualizados'); setTimeout(() => location.reload(), 700);
+            };
+        }
+    });
+};
+
+const defAddrs = u => [{ id: 'a1', nick: 'Residencial', name: (u && u.name) || 'Davy Jones', cep: '01310-100', street: 'Av. Paulista', num: '1000', comp: 'Apto 84', dist: 'Bela Vista', city: 'São Paulo', uf: 'SP', def: true },
+{ id: 'a2', nick: 'Trabalho', name: (u && u.name) || 'Davy Jones', cep: '04538-132', street: 'Av. Brigadeiro Faria Lima', num: '3477', comp: '12º andar', dist: 'Itaim Bibi', city: 'São Paulo', uf: 'SP', def: false }];
+pages.enderecos = () => {
+    const u = store.get('user', {}); let list = store.get('addrs', null) || defAddrs(u), edit = null;
+    const save = () => store.set('addrs', list);
+    accountPage({
+        active: 'end', crumb: 'Endereços de entrega', noTop: true, mobTop: false, mobSide: false,
+        inner: () => {
+            const card = a => `<article class="acard ${a.def ? 'def' : ''}"><div class="ah2"><span class="ico">${icon(a.nick === 'Trabalho' ? 'building' : 'home', 18)}</span><b>${esc(a.nick)}</b>${a.def ? '<span class="tag">Padrão</span>' : ''}</div>
+        <p>${esc(a.name)}<br>${esc(a.street)}, ${esc(a.num)}${a.comp ? ' — ' + esc(a.comp) : ''}<br>${esc(a.dist)}, ${esc(a.city)} — ${esc(a.uf)}<br><small>CEP ${esc(a.cep)}</small></p>
+        <div class="aact"><button type="button" class="btn soft sm" data-ed="${a.id}">${icon('edit', 13)} Editar</button>${a.def ? '' : `<button type="button" class="btn soft sm" data-df="${a.id}">Tornar padrão</button><button type="button" class="btn white sm dgr" data-rm="${a.id}" aria-label="Excluir">${icon('trash', 14)}</button>`}</div></article>`;
+            const e = edit === 'new' ? {} : list.find(x => x.id === edit) || null;
+            const form = e ? `<section class="card sset" id="aform"><div class="sh"><h3>${icon('pin', 20)} ${edit === 'new' ? 'NOVO ENDEREÇO' : 'EDITAR ENDEREÇO'}</h3></div>
+        <div class="fgrid2">${fld('a-nick', 'Apelido (ex.: Casa)', e.nick)}${fld('a-name', 'Destinatário', e.name || u.name)}${fld('a-cep', 'CEP', e.cep, { mode: 'numeric', max: 9, ph: '00000-000' })}${fld('a-street', 'Rua / Avenida', e.street)}${fld('a-num', 'Número', e.num)}${fld('a-comp', 'Complemento', e.comp)}${fld('a-dist', 'Bairro', e.dist)}${fld('a-city', 'Cidade', e.city)}${fld('a-uf', 'UF', e.uf, { max: 2 })}</div>
+        <p class="ferr" id="aerr"></p><div class="sact"><span></span><div class="r"><button type="button" class="btn white" id="acancel">Cancelar</button><button type="button" class="btn" id="asave">Salvar endereço ${icon('check', 15)}</button></div></div></section>` : '';
+            return `${pageHead('pin', 'Minha conta', 'Endereços de Entrega', `${list.length} ${list.length === 1 ? 'endereço cadastrado' : 'endereços cadastrados'}. O endereço padrão é usado no checkout.`)}
+        <div class="agrid3">${list.map(card).join('')}<button type="button" class="acard add" id="anew">${icon('plus', 22)}<b>Adicionar novo endereço</b></button></div>${form}`;
+        },
+        bind: (root, mob, rerender) => {
+            $$('[data-df]', root).forEach(b => b.onclick = () => { list.forEach(a => a.def = a.id === b.dataset.df); save(); toast('Endereço padrão atualizado'); rerender(); });
+            $$('[data-rm]', root).forEach(b => b.onclick = () => { if (confirm('Excluir este endereço?')) { list = list.filter(a => a.id !== b.dataset.rm); save(); rerender(); } });
+            $$('[data-ed]', root).forEach(b => b.onclick = () => { edit = b.dataset.ed; rerender(); $('#aform').scrollIntoView({ behavior: 'smooth' }); });
+            $('#anew', root).onclick = () => { edit = 'new'; rerender(); $('#aform').scrollIntoView({ behavior: 'smooth' }); };
+            const cancel = $('#acancel', root); if (!cancel) return;
+            cancel.onclick = () => { edit = null; rerender(); };
+            const cep = $('#a-cep', root); bindMask(cep, '#####-###');
+            cep.addEventListener('input', async () => { if (cep.value.length === 9) { try { const r = await (await fetch(`https://viacep.com.br/ws/${cep.value.replace('-', '')}/json/`)).json(); if (!r.erro) { $('#a-street', root).value = r.logradouro || ''; $('#a-dist', root).value = r.bairro || ''; $('#a-city', root).value = r.localidade || ''; $('#a-uf', root).value = r.uf || ''; } } catch { } } });
+            $('#asave', root).onclick = () => {
+                const g = i => $('#' + i, root).value.trim(), er = $('#aerr', root);
+                if (!g('a-nick') || !g('a-name') || !g('a-street') || !g('a-num') || !g('a-dist') || !g('a-city')) return er.textContent = 'Preencha os campos obrigatórios (complemento é opcional).';
+                if (g('a-cep').replace(/\D/g, '').length !== 8) return er.textContent = 'CEP inválido.';
+                if (g('a-uf').length !== 2) return er.textContent = 'Informe a UF com 2 letras.';
+                const d = { nick: g('a-nick'), name: g('a-name'), cep: g('a-cep'), street: g('a-street'), num: g('a-num'), comp: g('a-comp'), dist: g('a-dist'), city: g('a-city'), uf: g('a-uf').toUpperCase() };
+                if (edit === 'new') list.push({ id: 'a' + Date.now(), def: !list.length, ...d }); else Object.assign(list.find(a => a.id === edit), d);
+                save(); edit = null; toast('Endereço salvo'); rerender();
+            };
+        }
+    });
+};
+
+const brandOf = n => /^4/.test(n) ? 'Visa' : /^(5[1-5]|2[2-7])/.test(n) ? 'Mastercard' : /^3[47]/.test(n) ? 'Amex' : /^(636|606282|5067|4011)/.test(n) ? 'Elo' : 'Cartão';
+pages.pagamentos = () => {
+    let list = store.get('cards', null) || [{ id: 'c1', brand: 'Visa', last: '3812', exp: '08/27', holder: 'DAVY JONES', def: true }, { id: 'c2', brand: 'Mastercard', last: '5625', exp: '11/28', holder: 'DAVY JONES', def: false }], adding = false;
+    const save = () => store.set('cards', list);
+    const col = { Visa: '#1a1f71', Mastercard: '#222', Amex: '#006fcf', Elo: '#111', Cartão: '#444' };
+    accountPage({
+        active: 'pag', crumb: 'Formas de pagamento', noTop: true, mobTop: false, mobSide: false,
+        inner: () => {
+            const card = c => `<article class="ccard ${c.def ? 'def' : ''}"><div class="cvis" style="background:linear-gradient(135deg,${col[c.brand]},#000)"><span class="cb">${c.brand.toUpperCase()}</span><b>•••• •••• •••• ${c.last}</b><div><small>Titular</small><span>${esc(c.holder)}</span><small class="r">Validade <em>${c.exp}</em></small></div></div>
+        <div class="cft">${c.def ? '<span class="tag">Padrão</span>' : `<button type="button" class="btn soft sm" data-df="${c.id}">Tornar padrão</button>`}<button type="button" class="btn white sm dgr" data-rm="${c.id}" aria-label="Remover cartão">${icon('trash', 14)}</button></div></article>`;
+            const form = adding ? `<section class="card sset" id="cform"><div class="sh"><h3>${icon('card', 20)} NOVO CARTÃO</h3><small>${icon('lock', 12)} Ambiente seguro</small></div>
+        <div class="fgrid2">${fld('c-num', 'Número do cartão', '', { mode: 'numeric', max: 19, ph: '0000 0000 0000 0000', w: 'full' })}${fld('c-name', 'Nome impresso no cartão', '', { w: 'full' })}${fld('c-exp', 'Validade', '', { mode: 'numeric', max: 5, ph: 'MM/AA' })}${fld('c-cvv', 'CVV', '', { mode: 'numeric', max: 4, ph: '000' })}</div>
+        <p class="ferr" id="cerr"></p><div class="sact"><span class="mut" style="font-size:12px">O CVV não é armazenado. Guardamos apenas os 4 últimos dígitos.</span><div class="r"><button type="button" class="btn white" id="ccancel">Cancelar</button><button type="button" class="btn" id="csave">Salvar cartão ${icon('check', 15)}</button></div></div></section>` : '';
+            return `${pageHead('card', 'Minha conta', 'Formas de Pagamento', 'Gerencie seus cartões salvos para finalizar compras com um toque.')}
+        <div class="agrid3">${list.map(card).join('')}<button type="button" class="ccard add" id="cnew">${icon('plus', 22)}<b>Adicionar cartão</b></button></div>${form}
+        <section class="card sset"><div class="srow"><span class="ico">${icon('bolt', 18)}</span><div class="tx"><b>Pix com 5% de desconto</b><small>Disponível no checkout — pagamento instantâneo, sem cadastro prévio.</small></div></div></section>`;
+        },
+        bind: (root, mob, rerender) => {
+            $$('[data-df]', root).forEach(b => b.onclick = () => { list.forEach(c => c.def = c.id === b.dataset.df); save(); toast('Cartão padrão atualizado'); rerender(); });
+            $$('[data-rm]', root).forEach(b => b.onclick = () => { if (confirm('Remover este cartão?')) { const was = list.find(c => c.id === b.dataset.rm); list = list.filter(c => c.id !== was.id); if (was.def && list[0]) list[0].def = true; save(); rerender(); } });
+            $('#cnew', root).onclick = () => { adding = true; rerender(); $('#cform').scrollIntoView({ behavior: 'smooth' }); };
+            const cc = $('#ccancel', root); if (!cc) return;
+            cc.onclick = () => { adding = false; rerender(); };
+            const num = $('#c-num', root); num.addEventListener('input', () => num.value = maskDigits(num.value, '#### #### #### ####'));
+            bindMask($('#c-exp', root), '##/##'); bindMask($('#c-cvv', root), '####');
+            $('#csave', root).onclick = () => {
+                const g = i => $('#' + i, root).value.trim(), er = $('#cerr', root), d = g('c-num').replace(/\D/g, ''), [m, y] = g('c-exp').split('/').map(Number);
+                if (d.length < 15) return er.textContent = 'Número de cartão inválido.';
+                if (g('c-name').split(/\s+/).length < 2) return er.textContent = 'Informe o nome como está no cartão.';
+                if (!(m >= 1 && m <= 12) || !y || (2000 + y) * 12 + m < new Date().getFullYear() * 12 + new Date().getMonth() + 1) return er.textContent = 'Validade inválida ou vencida.';
+                if (g('c-cvv').length < 3) return er.textContent = 'CVV inválido.';
+                list.push({ id: 'c' + Date.now(), brand: brandOf(d), last: d.slice(-4), exp: g('c-exp'), holder: g('c-name').toUpperCase(), def: !list.length });
+                save(); adding = false; toast('Cartão adicionado'); rerender();
+            };
+        }
+    });
+};
+
+// boot
+document.addEventListener('DOMContentLoaded', () => {
+    renderHeader(); renderFooter(); renderBottomNav();
+    $$('[data-img]').forEach(el => { const i = document.createElement('img'); i.loading = 'lazy'; i.alt = ''; i.referrerPolicy = 'no-referrer'; i.src = IMG(el.dataset.img, +el.dataset.w || 900); i.onerror = () => i.remove(); el.appendChild(i); });
+    const fn = pages[document.body.dataset.page]; if (fn) fn();
+});
