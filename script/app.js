@@ -562,3 +562,193 @@ pages.conta = () => {
 };
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// telas da conta
+Object.assign(P, {
+    volume: '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>',
+    sparkle: '<path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15v4M17 17h4"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/>',
+    monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+    logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+    ext: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/>',
+    refresh: '<path d="M21 12a9 9 0 0 1-15.5 6.2L3 16M3 12A9 9 0 0 1 18.5 5.8L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/>',
+    globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/>',
+    palette: '<circle cx="13.5" cy="6.5" r="1.2"/><circle cx="17.5" cy="10.5" r="1.2"/><circle cx="8.5" cy="7.5" r="1.2"/><circle cx="6.5" cy="12.5" r="1.2"/><path d="M12 2a10 10 0 1 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.300A4.700 4.700 0 0 0 22 10.700C22 5.800 17.500 2 12 2z"/>',
+    finger: '<path d="M12 11a2 2 0 0 0-2 2c0 3-1 5-2 7M12 7a6 6 0 0 0-6 6c0 2 0 4-1 6M17 12a5 5 0 0 0-10 0M9 3.500A9 9 0 0 1 21 12c0 2 0 4-.5 6M15 20c.5-1.500 1-3.500 1-6"/>',
+    ticket: '<path d="M3 9a2 2 0 0 0 0 6v3a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-3a2 2 0 0 1 0-6V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1z"/><path d="M13 5v14"/>',
+    camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+    ruler: '<path d="M3 17h18M3 13h18M7 13v4M11 13v4M15 13v4"/>',
+    locate: '<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>',
+    traffic: '<rect x="8" y="2" width="8" height="20" rx="3"/><circle cx="12" cy="7" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="17" r="1"/>',
+    building: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 21v-5h6v5M8 7h.01M12 7h.01M16 7h.01M8 11h.01M12 11h.01M16 11h.01"/>',
+    verified: '<path d="m3.8 12 1.6-2.200-.3-2.700 2.700-.5L9.200 4.300 12 5.200l2.800-.9 1.400 2.300 2.700.5-.3 2.700L20.200 12l-1.600 2.200.3 2.700-2.700.5-1.400 2.300-2.800-.9-2.800.9-1.400-2.300-2.700-.5.3-2.700z"/><path d="m9 12 2 2 4-4"/>',
+    idcard: '<rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="11" r="2.500"/><path d="M5.500 17a3.500 3.500 0 0 1 7 0M15 10h4M15 14h4"/>',
+    chev: '<path d="m9 18 6-6-6-6"/>',
+    plus2: '<path d="M12 5v14M5 12h14"/>'
+});
+const isMobile = () => matchMedia('(max-width:768px)').matches;
+const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+const fmtDate = iso => { const d = new Date(iso); return `${String(d.getDate()).padStart(2, '0')} ${MESES[d.getMonth()]} ${d.getFullYear()}`; };
+const initialsOf = n => esc(String(n).split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase());
+function requireUser() {
+    const u = store.get('user', null);
+    if (!u) { location.replace('conta.html?next=' + encodeURIComponent(location.pathname.split('/').pop() || 'perfil.html') + '#login'); return null; }
+    return u;
+}
+const noHash = root => $$('a[href="#"]', root).forEach(a => a.addEventListener('click', e => e.preventDefault()));
+
+// perfil e config
+function accountHtml(u, mob, o) {
+    const fav = favs().size;
+    const items = [
+        // [chave, ícone, rótulo desktop, rótulo mobile, subtítulo mobile, meta desktop, href, escopo d|m|b]
+        ['geral', 'grid', 'Visão Geral', '', '', '•', 'perfil.html', 'd'],
+        ['pedidos', 'pkg', 'Meus Pedidos', 'Meus Pedidos', 'Histórico, andamento e devoluções', 'pill:1 em trânsito', 'perfil.html#pedidos', 'b'],
+        ['salvas', 'heart', 'Peças Salvas', '', '', String(fav), 'favoritos.html', 'd'],
+        ['aval', 'msg', 'Avaliações & Pontos', 'Avaliações de Produtos', 'Deixe sua opinião e ganhe pontos', '›', '#', 'b'],
+        ['cupons', 'ticket', 'Cupons & Descontos', 'Cupons & Descontos', '3 vouchers disponíveis para uso', 'gpill:3 ativos', '#', 'b'],
+        ['dados', 'idcard', 'Dados Pessoais', 'Meus Dados Pessoais', 'Nome, e-mail, telefone e nascimento', '›', 'dados.html', 'b'],
+        ['end', 'pin', 'Endereços de Entrega', 'Endereços de Entrega', '2 endereços cadastrados (Padrão: SP)', '2 salvos', 'enderecos.html', 'b'],
+        ['pag', 'card', 'Formas de Pagamento', 'Formas de Pagamento', 'Visa final 3812 e Mastercard final 5625', '›', 'pagamentos.html', 'b'],
+        ['config', 'filter', 'Configurações & Privacidade', '', '', '•', 'configuracoes.html', 'd'],
+        ['cfgapp', 'gear', '', 'Configurações do App', 'Notificações push, tema e idioma', '›', 'configuracoes.html', 'm'],
+        ['faq', 'help', '', 'Perguntas Frequentes (FAQ)', 'Tire dúvidas sobre prazos, trocas e frete', '›', '#', 'm'],
+        ['ajuda', 'headset', '', 'Central de Ajuda', 'Fale com um consultor pelo chat 24h', '›', '#', 'm']
+    ];
+    const row = it => {
+        const [k, ic, d, m, sub, meta, href, sc] = it;
+        if ((sc === 'd' && mob) || (sc === 'm' && !mob)) return '';
+        const pill = meta.startsWith('pill:') ? `<span class="apill">${meta.slice(5)}</span>` : meta.startsWith('gpill:') ? `<span class="apill g">${meta.slice(6)}</span>` : '';
+        const right = mob ? pill + icon('chev', 16)
+            : pill || (meta === '•' ? '<i class="adot"></i>' : meta === '›' ? icon('chev', 16) : `<small class="ameta">${meta}</small>`);
+        return `<a class="ai ${k === o.active ? 'on' : ''}" href="${href}">${icon(ic, 20)}<span class="at"><b>${mob ? m : d}</b>${mob && sub ? `<small>${sub}</small>` : ''}</span>${right}</a>`;
+    };
+    const grp = (t, r, keys) => `<div class="agrp"><div class="agh"><span>${t}</span><span>${r}</span></div><div class="agl">${items.filter(i => keys.includes(i[0])).map(row).join('')}</div></div>`;
+    const side = `<aside class="aside card" id="pedidos-anchor">
+    ${grp('Minhas compras', mob ? 'Atividade recente' : 'Atividade', ['geral', 'pedidos', 'salvas', 'aval', 'cupons'])}
+    ${grp(mob ? 'Conta & dados' : 'Conta & pagamentos', '', ['dados', 'end', 'pag', 'config'])}
+    ${mob ? grp('Preferências & suporte', '', ['cfgapp', 'faq', 'ajuda']) : ''}
+    <button class="alogout" id="logout">${icon('logout', 16)} Encerrar sessão</button>
+    <p class="aver">Versão 2.4.0 • Build 892</p></aside>`;
+    const head = `<section class="card phead"><div class="pav"><span>${initialsOf(u.name)}</span><button class="cam" type="button" aria-label="Alterar foto">${icon('camera', 15)}</button></div>
+    <div class="pinfo"><h1>${esc(u.name)}</h1><span class="tag"><i class="rd"></i> Membro VESTTA // Nível 03</span><p>${esc(u.email || 'davy.jones@exemplo.com')}</p><small>Desde outubro de 2023 <i class="sep"></i> <a href="dados.html">Editar dados ↗</a></small></div>
+    <button class="pedit" type="button" aria-label="Editar dados">${icon('edit', 18)}</button>
+    <div class="pstats"><div><b>12</b><small>Pedidos</small></div><div><b>${fav}</b><small>Salvos</small></div><div><b>3</b><small>Cupons</small></div></div></section>`;
+    const banner = `<section class="trkb" data-go="rastreamento.html"><span class="tic">${icon('truck', 22)}</span>
+    <div class="tbt"><small><i class="rd"></i> Rastreio em tempo real <em class="dk">#ORD-89421</em><span class="st dk">Em trânsito</span></small>
+      <b class="dk">Previsão: Hoje até às 18:00 com courier parceiro Lucas Mendes</b><b class="mo">#ORD-89421 • Em Trânsito</b>
+      <small class="dest dk">Destino: Av. Paulista, 1000 — Bela Vista, São Paulo/SP</small><small class="dest mo">Previsão: Chega hoje até 18h</small></div>
+    <div class="tbb dk"><a class="btn white" href="rastreamento.html">Rastrear entrega ${icon('navi', 15)}</a><a class="btn ghost" href="rastreamento.html">Ver detalhes</a></div>
+    <span class="tgo mo">${icon('right', 18)}</span><span class="tdeco dk">${icon('truck', 120)}</span></section>`;
+    const showTop = !o.noTop && (!mob || o.mobTop), showSide = !mob || o.mobSide;
+    return `<div class="wrap acct">
+    <div class="crumbs"><a href="index.html">Início</a><span>/</span><a href="perfil.html">Minha conta</a><span>/</span><b>${o.crumb}</b></div>
+    ${showTop ? head + banner : ''}
+    <div class="agrid ${showSide ? '' : 'noside'}">${showSide ? side : ''}<div class="amain">${o.inner(mob, u)}</div></div></div>`;
+}
+function accountPage(o) {
+    const u = requireUser(); if (!u) return;
+    const root = $('#acct');
+    const render = () => {
+        const mob = isMobile();
+        root.innerHTML = accountHtml(u, mob, o);
+        const lo = $('#logout'); if (lo) lo.onclick = () => { store.del('user'); location.href = 'conta.html#login'; };
+        $$('[data-go]', root).forEach(el => el.addEventListener('click', e => { if (mob && !e.target.closest('a')) location.href = el.dataset.go; }));
+        const cam = $('.cam', root); if (cam) cam.onclick = () => toast('Troca de foto disponível em breve');
+        const ped = $('.pedit', root); if (ped) ped.onclick = () => location.href = 'dados.html';
+        noHash(root);
+        if (o.bind) o.bind(root, mob, render);
+        if (location.hash === '#pedidos') { const t = $('#recentes'); if (t) t.scrollIntoView(); }
+    };
+    render();
+    matchMedia('(max-width:768px)').addEventListener('change', render);
+}
+
+// perfil
+pages.perfil = () => accountPage({
+    active: 'geral', crumb: 'Visão geral', mobTop: true, mobSide: true,
+    inner: (mob, u) => {
+        if (mob) return '';
+        const names = it => it.map(i => (byId(i.id) || {}).name).filter(Boolean);
+        const card = c => `<div class="ocard"><div class="oh"><div class="c"><small>Pedido</small><b>#${c.id}</b></div><div class="c"><small>Data</small><b>${c.date}</b></div><div class="c"><small>Total</small><b>${c.total}</b></div><span class="sb ${c.done ? 'ok' : ''}">${c.status}</span></div>
+      <div class="oi2"><div class="othw">${c.thumbs.map(t => `<div class="oth">${pic(byId(t), '')}<em>1x</em></div>`).join('')}</div><div class="otx"><b>${c.title}</b><small>${c.sub}</small><small class="up">${c.note}</small></div><div class="oact">${c.actions}</div></div></div>`;
+        const real = store.get('order', null);
+        const cards = [];
+        if (real && real.id !== 'ORD-89421' && (real.items || []).length) {
+            const n = names(real.items);
+            cards.push(card({
+                id: real.id, date: fmtDate(real.date), total: brl(real.total), status: 'Em preparação', thumbs: real.items.slice(0, 2).map(i => i.id), title: n.slice(0, 2).join(' + '),
+                sub: 'Tamanhos: ' + real.items.map(i => i.size).join(' e ') + ' • Cor: ' + real.items.map(i => i.color).join(' / '), note: 'Previsão: chega amanhã até às 18:00',
+                actions: '<a class="btn sm" href="rastreamento.html">Rastrear</a><a class="btn soft sm" href="#">DANFE PDF</a>'
+            }));
+        }
+        cards.push(card({
+            id: 'ORD-89421', date: '14 Março 2025', total: 'R$ 1.190,00', status: 'Em trânsito', thumbs: ['boxy-slogan-tee', 'baggy-denim'], title: 'Camiseta Regular Fit Slogan + Calça Wide Atelier',
+            sub: 'Tamanhos: G e 42 • Cor: Onyx Black / Charcoal', note: 'Previsão: chega hoje até às 18:00', actions: '<a class="btn sm" href="rastreamento.html">Rastrear</a><a class="btn soft sm" href="#">DANFE PDF</a>'
+        }));
+        cards.push(card({
+            id: 'ORD-87110', date: '02 Fevereiro 2025', total: 'R$ 680,00', status: 'Entregue', done: 1, thumbs: ['grey-pullover-hoodie'], title: 'Heavyweight Boxy Hoodie // Mineral Grey',
+            sub: 'Tamanho: GG • Coleção Drop 03', note: 'Entregue em 05/02/2025', actions: '<a class="btn soft sm" href="#">Avaliar produto</a><a class="btn sm" href="produto.html?id=heavyweight-hoodie">Comprar novamente</a>'
+        }));
+        return `<section class="card rec" id="recentes"><div class="rh"><div><small>Histórico de compras</small><h2>Pedidos Recentes</h2></div><a href="#">Ver todos (12) ${icon('right', 14)}</a></div>${cards.join('')}</section>
+      <div class="dgrid2">
+        <section class="card dcard"><div class="dh"><b>${icon('pin', 17)} Endereço Padrão</b><span class="tag">Padrão</span></div>
+          <div class="dbox"><b>${esc(u.name)} (Residencial)</b><br>Av. Paulista, 1000 — Apto 84<br>Bela Vista, São Paulo — SP<br><span class="up" style="font-size:10px;color:#666">CEP: 01310-100</span></div>
+          <div class="df"><a href="enderecos.html" class="mut">Gerenciar todos (2)</a><a class="btn soft sm" href="enderecos.html">Editar endereço</a></div></section>
+        <section class="card dcard"><div class="dh"><b>${icon('card', 17)} Cartão Padrão</b><span class="tag">Padrão</span></div>
+          <div class="cbox"><span class="vs">VISA</span><div><b>•••• 3812</b><small>Expira em 08/27</small></div><span class="ck">${icon('check', 14)}</span></div>
+          <div class="df"><small>Formas salvas (2)</small><a class="btn soft sm" href="pagamentos.html">Alterar cartão</a></div></section>
+      </div>`;
+    }
+});
+
+// configurações
+pages.configuracoes = () => {
+    const DEF = { notif: true, drops: true, sound: true, promo: true, orders: true, beta: false, twofa: true, theme: 'claro', lang: 'Português (Brasil)', cur: 'Real Brasileiro (R$ · BRL)', shoe: 'BR (41 · 42) / 10 US' };
+    let saved = { ...DEF, ...store.get('settings', {}) }, draft = { ...saved }, devices = [true, true];
+    const tg = (k, ic, t, s) => `<div class="srow"><span class="ico">${icon(ic, 18)}</span><div class="tx"><b>${t}</b><small>${s}</small></div><button type="button" class="sw-t ${draft[k] ? 'on' : ''}" data-t="${k}" aria-label="${t}"></button></div>`;
+    const sel = (k, ic, t, s, opts) => `<div class="selc"><div class="t"><span class="ico">${icon(ic, 17)}</span><div><b>${t}</b><small>${s}</small></div></div><label>${`<select data-s="${k}">${opts.map(x => `<option ${x === draft[k] ? 'selected' : ''}>${x}</option>`).join('')}</select>`}${icon('down', 15)}</label></div>`;
+    accountPage({
+        active: 'config', crumb: 'Configurações', noTop: true, mobTop: false, mobSide: false,
+        inner: () => `
+      <section class="card shead"><span class="sic">${icon('filter', 24)}</span><div><small>Preferências do sistema</small><h1>Configurações da Conta &amp; Preferências</h1><p>Gerencie alertas de drops exclusivos, segurança, dados pessoais e parâmetros da plataforma.</p></div></section>
+      <section class="card sset"><div class="sh"><h3>${icon('bell', 20)} NOTIFICAÇÕES &amp; ALERTAS</h3><small>Tempo real</small></div>
+        ${tg('notif', 'bell', 'Notificações Gerais', 'Alertas essenciais de conta, login e envios logísticos')}
+        ${tg('drops', 'flame', 'Ofertas Especiais & Drops', 'Acesso antecipado prioritário de lançamentos e tiragens limitadas')}
+        ${tg('sound', 'volume', 'Sons e Alertas Sonoros', 'Efeitos acústicos dedicados nos alertas instantâneos')}
+        ${tg('promo', 'ticket', 'Promoções e Cupons Sazonais', 'Descontos selecionados, parcerias e códigos exclusivos')}
+        ${tg('orders', 'truck', 'Atualizações de Pedidos em Tempo Real', 'Rastreamento etapa por etapa, de separação até a entrega final')}
+        ${tg('beta', 'sparkle', 'Novos Recursos & Versões Beta', 'Testar antecipadamente melhorias da interface e novos módulos')}
+      </section>
+      <section class="card sset"><div class="sh"><h3>${icon('palette', 20)} PREFERÊNCIAS DE EXIBIÇÃO &amp; APP</h3><small>Interface</small></div>
+        <div class="theme"><div><b>Tema da Plataforma</b><small>Defina o contraste estético de navegação</small></div>
+          <div class="seg3">${[['claro', 'sun', 'Claro'], ['escuro', 'moon', 'Escuro'], ['auto', 'monitor', 'Automático']].map(t => `<button type="button" data-theme="${t[0]}" class="${draft.theme === t[0] ? 'on' : ''}">${icon(t[1], 14)} ${t[2]}</button>`).join('')}</div></div>
+        <div class="sel3">
+          ${sel('lang', 'globe', 'Idioma', 'Localização', ['Português (Brasil)', 'English (US)', 'Español'])}
+          ${sel('cur', 'cash', 'Moeda de Cobrança', 'Checkout & Catálogo', ['Real Brasileiro (R$ · BRL)', 'Dólar (US$ · USD)', 'Euro (€ · EUR)'])}
+          ${sel('shoe', 'ruler', 'Tamanho Calçados', 'Filtro Rápido Sneakers', ['BR (41 · 42) / 10 US', 'BR (39 · 40) / 8 US', 'BR (43 · 44) / 12 US'])}
+        </div></section>
+      <section class="card sset"><div class="sh"><h3>${icon('shield', 20)} SEGURANÇA &amp; PRIVACIDADE</h3></div>
+        <div class="srow"><span class="ico">${icon('finger', 18)}</span><div class="tx"><b>Autenticação em Duas Etapas &amp; Biometria <span class="rec2">Recomendado</span></b><small>Face ID / Touch ID ativo para autorização de pagamentos expressos e logins</small></div><button type="button" class="sw-t ${draft.twofa ? 'on' : ''}" data-t="twofa" aria-label="Autenticação em duas etapas"></button></div>
+        <div class="srow"><span class="ico">${icon('refresh', 18)}</span><div class="tx"><b>Senha da Conta</b><small>Última troca realizada há 3 meses • Nível de força: Excelente</small></div><button type="button" class="btn white sm" id="pwd">Atualizar senha ${icon('edit', 13)}</button></div>
+        <div class="label" style="margin:18px 0 8px">Dispositivos conectados recentemente</div>
+        <div class="dev">
+          <div class="devc"><span class="ico">${icon('monitor', 18)}</span><div><b>MacBook Pro 16" <i class="rd"></i></b><small>Sessão Atual • São Paulo, Brasil</small><small class="mut">Chrome 122.0 • IP 189.40.***</small></div><span class="act">Ativo</span></div>
+          ${devices[1] ? `<div class="devc"><span class="ico">${icon('phone', 18)}</span><div><b>iPhone 15 Pro <i class="rd"></i></b><small>App VESTTA iOS • Ativo agora</small><small class="mut">iOS 17.4 • Biometria On</small></div><button type="button" class="dout" aria-label="Encerrar sessão do dispositivo">${icon('logout', 16)}</button></div>` : ''}
+        </div>
+        <a class="srow lgpd" href="#"><span class="ico">${icon('shield', 18)}</span><div class="tx"><b>Política de Privacidade &amp; Gestão LGPD</b><small>Transparência rigorosa sobre armazenamento e uso de dados pessoais</small></div>${icon('ext', 17)}</a>
+      </section>
+      <div class="sact"><button type="button" class="btn soft sm cache" id="cache">${icon('refresh', 14)} Limpar cache &amp; histórico (48.2 MB)</button><div class="r"><button type="button" class="btn white" id="discard">Descartar</button><button type="button" class="btn" id="save">Salvar alterações ${icon('check', 15)}</button></div></div>`,
+        bind: (root, mob, rerender) => {
+            $$('[data-t]', root).forEach(b => b.onclick = () => { draft[b.dataset.t] = !draft[b.dataset.t]; b.classList.toggle('on', draft[b.dataset.t]); });
+            $$('[data-theme]', root).forEach(b => b.onclick = () => { draft.theme = b.dataset.theme; $$('[data-theme]', root).forEach(x => x.classList.toggle('on', x === b)); });
+            $$('[data-s]', root).forEach(s => s.onchange = () => { draft[s.dataset.s] = s.value; });
+            const out = $('.dout', root); if (out) out.onclick = () => { devices[1] = false; toast('Sessão encerrada no iPhone 15 Pro'); rerender(); };
+            $('#pwd', root).onclick = () => toast('Enviamos um link de redefinição para o seu e-mail');
+            $('#cache', root).onclick = () => toast('Cache e histórico limpos');
+            $('#save', root).onclick = () => { saved = { ...draft }; store.set('settings', saved); toast('Preferências salvas'); };
+            $('#discard', root).onclick = () => { draft = { ...saved }; devices = [true, true]; rerender(); toast('Alterações descartadas'); };
+        }
+    });
+};

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Coleção — VESTTA</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600;6..72,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body data-page="colecao">
+  <div id="app-header"></div>
+
+  <main class="wrap">
+    <div class="crumbs"><a href="index.html">Início</a><span>/</span><a href="colecao.html">Coleções</a><span>/</span><a
+        href="colecao.html">Drop 04</a><span>/</span><b>Moletom</b></div>
+    <div class="page-title">
+      <h1><span id="list-title">Coleção Drop 04</span> <small id="list-count"></small></h1>
+      <span class="label up" style="letter-spacing:.12em">Vestta Selection &nbsp;•&nbsp; <b style="color:#000">Drop
+          04</b></span>
+    </div>
+
+    <div class="notice">
+      <span class="ic"><svg class="i" viewBox="0 0 24 24">
+          <path d="M13 2 3 14h9l-1 8 10-12h-9z" />
+        </svg></span>
+      <span><b>DROP 04 EXCLUSIVE:</b> Condições especiais em peças selecionadas. Use o cupom no checkout.</span>
+      <code>STREET30</code><small>30% off aplicado no checkout</small>
+    </div>
+
+    <div class="toolbar">
+      <div class="chips" id="list-tabs">
+        <button class="chip" data-cat="todos">Todos</button>
+        <button class="chip" data-cat="camisetas">Camisetas</button>
+        <button class="chip" data-cat="moletons">Moletons</button>
+        <button class="chip" data-cat="jaquetas">Jaquetas</button>
+        <button class="chip" data-cat="calcas">Calças</button>
+        <button class="chip" data-cat="tenis">Tênis</button>
+        <button class="chip" data-cat="acessorios">Acessórios</button>
+      </div>
+      <div class="right">
+        <button class="chip" id="q-chip" style="background:#e8e8e8;color:#000;font-size:10px;height:30px;display:none">⌕
+          <span style="margin:0 6px"></span> ✕</button>
+        <button class="chip m-only" id="open-filters" type="button">⚙ Filtros</button>
+        <select id="sort" aria-label="Ordenar">
+          <option value="relevancia">Relevância</option>
+          <option value="menor">Menor preço</option>
+          <option value="maior">Maior preço</option>
+          <option value="avaliacao">Melhor avaliação</option>
+        </select>
+        <button class="seg on" aria-label="Grade"><svg class="i" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+          </svg></button>
+        <button class="seg" aria-label="Lista"><svg class="i" viewBox="0 0 24 24">
+            <path d="M3 6h18M3 12h18M3 18h18" />
+          </svg></button>
+      </div>
+    </div>
+
+    <div class="layout">
+      <aside class="filters">
+        <div class="hd"><span>⚙ Filtros</span><small id="clear">LIMPAR (0)</small></div>
+        <div class="fg">
+          <h4>Modelagem <small>⌃</small></h4>
+          <label class="chk"><input type="checkbox" data-fit="Oversized Pesado">Oversized Pesado<em>64</em></label>
+          <label class="chk"><input type="checkbox" data-fit="Boxy Fit">Boxy Fit<em>52</em></label>
+          <label class="chk"><input type="checkbox" data-fit="Regular Fit">Regular Fit<em>32</em></label>
+        </div>
+        <div class="fg">
+          <h4>Tamanho <small>ABNT</small></h4>
+          <div class="sizes" id="fsizes"><button class="size">PP</button><button class="size">P</button><button
+              class="size">M</button><button class="size">G</button><button class="size">GG</button><button
+              class="size">XGG</button></div>
+        </div>
+        <div class="fg">
+          <h4>Cores selecionadas</h4>
+          <div class="swatches" id="fcolors">
+            <button class="sw" data-c="Preto" style="background:#111"><svg class="i" viewBox="0 0 24 24">
+                <path d="M20 6 9 17l-5-5" />
+              </svg></button>
+            <button class="sw" data-c="Marrom" style="background:#4a0c14"><svg class="i" viewBox="0 0 24 24">
+                <path d="M20 6 9 17l-5-5" />
+              </svg></button>
+            <button class="sw light" data-c="Off" style="background:#e4e4e4"><svg class="i" viewBox="0 0 24 24">
+                <path d="M20 6 9 17l-5-5" />
+              </svg></button>
+            <button class="sw" data-c="Cinza" style="background:#9a9a9a"><svg class="i" viewBox="0 0 24 24">
+                <path d="M20 6 9 17l-5-5" />
+              </svg></button>
+            <button class="sw" data-c="Bege" style="background:#b9a98a"><svg class="i" viewBox="0 0 24 24">
+                <path d="M20 6 9 17l-5-5" />
+              </svg></button>
+            <button class="sw" data-c="Verde" style="background:#3f4d3a"><svg class="i" viewBox="0 0 24 24">
+                <path d="M20 6 9 17l-5-5" />
+              </svg></button>
+          </div>
+        </div>
+        <div class="fg">
+          <h4>Faixa de preço <small>BRL</small></h4>
+          <input type="range" id="frange" min="99" max="2890" value="2890">
+          <div class="range-l"><span>R$ 99</span><span id="frange-max">R$ 2.890</span></div>
+        </div>
+        <div class="fg">
+          <h4>Material</h4>
+          <label class="chk"><input type="checkbox">Algodão</label>
+          <label class="chk"><input type="checkbox">Moletom encorpado</label>
+          <label class="chk"><input type="checkbox">Tecidos técnicos</label>
+        </div>
+        <div class="fg" style="margin:0">
+          <h4>Disponibilidade</h4>
+          <div class="chk" style="justify-content:space-between;cursor:default"><span>Pronta Entrega</span><span
+              style="width:7px;height:7px;border-radius:50%;background:#000"></span></div>
+          <div class="chk" style="justify-content:space-between;cursor:default"><span>Últimas Unidades</span><span
+              style="font-size:10px;color:var(--accent);font-weight:700">Crítico</span></div>
+        </div>
+      </aside>
+
+      <section>
+        <div class="grid c4" id="list-grid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr))"></div>
+        <div class="pager">
+          <span id="list-show"></span>
+          <div class="p"><button>‹</button><button class="on">1</button><button>2</button><button>3</button><span
+              style="align-self:center">…</span><button>12</button><button>›</button></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="app-footer"></div>
+  <script src="js/app.js"></script>
+</body>
+
+</html>
